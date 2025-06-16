@@ -3,6 +3,7 @@
   "version": "1.0.0-beta.1",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build:types": "rimraf *.d.ts **/*.d.ts; tsc",
     "lint": "standard",
@@ -14,7 +15,10 @@
     "url": "git+https://github.com/tetherto/wdk-wallet-ton-gasless.git"
   },
   "dependencies": {
-    "@wdk/wallet-ton": "https://github.com/AlonzoRicardo/wdk-wallet-ton#feature/refactor-of-wdk-wallet"
+    "@wdk/wallet-ton": "https://github.com/AlonzoRicardo/wdk-wallet-ton#feature/refactor-of-wdk-wallet",
+    "@ton-api/client": "^0.4.0",
+    "@ton-api/ton-adapter": "^0.4.0",
+    "@ton/ton": "^15.2.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

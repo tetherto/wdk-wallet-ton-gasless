@@ -16,7 +16,7 @@
 import { WalletAccountTon } from '@wdk/wallet-ton'
 
 export default class WalletAccountTonGasless extends WalletAccountTon {
-  constructor(seed, path, config) {
+  constructor (seed, path, config) {
     super(seed, path, config)
   }
 }

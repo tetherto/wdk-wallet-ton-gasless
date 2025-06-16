@@ -1,5 +1,7 @@
 {
   "include": [
+    "./src/wallet-account-ton-gasless.js",
+    "./src/wallet-manager-ton-gasless.js",
     "index.js",
   ],
   "compilerOptions": {

@@ -14,6 +14,7 @@
 'use strict'
 
 import WalletManagerTon from '@wdk/wallet-ton'
+import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
 /**
  * @typedef {Object} TonGaslessWalletConfig
@@ -29,4 +30,24 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
   constructor(seed, config) {
     super(seed, config)
   }
+
+  /**
+   * Returns the wallet account at a specific BIP-44 derivation path.
+   *
+   * @example
+   * // Returns the account with derivation path m/44'/607'/0'/0/1
+   * const account = await wallet.getAccountByPath("0'/0/1");
+   * @param {string} path - The derivation path (e.g. "0'/0/0").
+   * @returns {Promise<WalletAccountTonGasless>} The account.
+   */
+  async getAccountByPath(path) {
+    if (!this._accounts[path]) {
+      const account = new WalletAccountTonGasless(this.seed, path, this._config)
+
+      this._accounts[path] = account
+    }
+
+    return this._accounts[path]
+  }
+
 }
