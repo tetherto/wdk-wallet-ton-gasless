@@ -13,8 +13,8 @@
 // limitations under the License.
 'use strict'
 
-/** @typedef {import('./src/wallet-account-ton-gasless.js').TonWalletConfig} TonWalletConfig */
-/** @typedef {import('./src/wallet-account-ton-gasless.js').TonTransaction} TonTransaction */
+/** @typedef {import('./src/wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
+/** @typedef {import('./src/wallet-account-ton-gasless.js').TransferConfig} TransferConfig */
 
 export { default } from './src/wallet-manager-ton-gasless.js'
 

@@ -16,31 +16,29 @@
 import WalletManagerTon from '@wdk/wallet-ton'
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
-/**
- * @typedef {Object} TonGaslessWalletConfig
- * @property {string | TonClient} [tonCenterUrl] - The url of the ton center api, or a instance of the {@link TonClient} class.
- * @property {string} [tonCenterSecretKey] - The api-key to use to authenticate on the ton center api.
- * @property {string | TonClient} [tonCenterUrl] - The url of the ton center api, or a instance of the {@link TonClient} class.
- * @property {string} [tonCenterSecretKey] - The api-key to use to authenticate on the ton center api.
- * @property {Object} paymasterToken - The paymaster token configuration.
- * @property {string} paymasterToken.address - The address of the paymaster token.
- */
+/** @typedef {import('./wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
 
 export default class WalletManagerTonGasless extends WalletManagerTon {
-  constructor(seed, config) {
+  /**
+   * Creates a new gasless wallet manager for the ton blockchain.
+   *
+   * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
+   * @param {TonGaslessWalletConfig} [config] - The configuration object.
+   */
+  constructor (seed, config) {
     super(seed, config)
   }
 
   /**
-   * Returns the wallet account at a specific BIP-44 derivation path.
+   * Returns the gasless wallet account at a specific BIP-44 derivation path.
    *
    * @example
    * // Returns the account with derivation path m/44'/607'/0'/0/1
    * const account = await wallet.getAccountByPath("0'/0/1");
    * @param {string} path - The derivation path (e.g. "0'/0/0").
-   * @returns {Promise<WalletAccountTonGasless>} The account.
+   * @returns {Promise<WalletAccountTonGasless>} The gasless account.
    */
-  async getAccountByPath(path) {
+  async getAccountByPath (path) {
     if (!this._accounts[path]) {
       const account = new WalletAccountTonGasless(this.seed, path, this._config)
 
@@ -49,5 +47,4 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
 
     return this._accounts[path]
   }
-
 }
