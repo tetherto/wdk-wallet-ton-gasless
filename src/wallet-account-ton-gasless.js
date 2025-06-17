@@ -49,7 +49,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
    * @param {string} path - The BIP-44 derivation path (e.g. "0'/0/0").
    * @param {TonGaslessWalletConfig} [config] - The configuration object.
    */
-  constructor(seed, path, config) {
+  constructor (seed, path, config) {
     super(seed, path, config)
 
     const { tonApiUrl, tonApiSecretKey } = config
@@ -95,7 +95,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
    * @param {TransferConfig} config - The transfer's configuration.
    * @returns {Promise<TransferResult>} The transfer's result.
    */
-  async transfer({ recipient, amount, token }, config) {
+  async transfer ({ recipient, amount, token }, config) {
     const { paymasterToken, transferMaxFee } = config ?? this._config
     const { internalMessage, messageToEstimate } = await this._buildGaslessTransfer({ recipient, amount, token })
     const gaslessParams = await this._getGaslessEstimate(
@@ -124,7 +124,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
    * @param {TransferConfig} config - The transfer's configuration.
    * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
    */
-  async quoteTransfer(opts, config) {
+  async quoteTransfer (opts, config) {
     const { paymasterToken } = config ?? this._config
     const { messageToEstimate } = await this._buildGaslessTransfer(opts)
     const gaslessParams = await this._getGaslessEstimate(
@@ -136,7 +136,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   }
 
   /** @private */
-  async _buildGaslessTransfer({ recipient, amount, token }) {
+  async _buildGaslessTransfer ({ recipient, amount, token }) {
     const destAddress = Address.parse(recipient)
     const jettonWallet = await this._getJettonWalletAddress(token)
     const relayerAddress = await this._getRelayAddress()
@@ -171,14 +171,14 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   }
 
   /** @private */
-  async _getRelayAddress() {
+  async _getRelayAddress () {
     const gaslessConfig = await this._tonApiClient.gasless.gaslessConfig()
 
     return gaslessConfig.relayAddress
   }
 
   /** @private */
-  async _sendGaslessTransaction(gaslessParams, tokenAddress) {
+  async _sendGaslessTransaction (gaslessParams, tokenAddress) {
     const jettonMasterBalance = await this.getTokenBalance(tokenAddress)
 
     if (jettonMasterBalance < Number(gaslessParams.commission)) {
@@ -227,7 +227,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   }
 
   /** @private */
-  async _getGaslessEstimate(jettonMasterAddress, boc) {
+  async _getGaslessEstimate (jettonMasterAddress, boc) {
     return await this._tonApiClient.gasless.gaslessEstimate(
       jettonMasterAddress,
       {

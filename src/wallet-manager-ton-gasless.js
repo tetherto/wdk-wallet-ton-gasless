@@ -20,16 +20,6 @@ import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
 export default class WalletManagerTonGasless extends WalletManagerTon {
   /**
-   * Creates a new gasless wallet manager for the ton blockchain.
-   *
-   * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
-   * @param {TonGaslessWalletConfig} [config] - The configuration object.
-   */
-  constructor (seed, config) {
-    super(seed, config)
-  }
-
-  /**
    * Returns the gasless wallet account at a specific BIP-44 derivation path.
    *
    * @example

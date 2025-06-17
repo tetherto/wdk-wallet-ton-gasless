@@ -1,69 +1,52 @@
-/**
- * @typedef {Object} TonGaslessWalletConfig
- * @property {string | TonClient} [tonCenterUrl] - The url of the ton center api, or a instance of the {@link TonClient} class.
- * @property {string} [tonCenterSecretKey] - The api-key to use to authenticate on the ton center api.
- * @property {string | TonApiClient} [tonApiUrl] - The url of the tonapi.io, or a instance of the {@link TonApiClient} class.
- * @property {string} [tonApiSecretKey] - The api-key to use to authenticate on tonapi.io.
- * @property {Object} paymasterToken - The paymaster token configuration.
- * @property {string} paymasterToken.address - The address of the paymaster token.
- */
 export default class WalletAccountTonGasless {
-    constructor(seed: any, path: any, config: any);
-    _tonApiClient: any;
-    _contractAdapter: any;
     /**
-     * transfer
-     * @param {*} param0
-     * @param {*} config
-     * @returns
+     * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
+     * @param {string} path - The BIP-44 derivation path (e.g. "0'/0/0").
+     * @param {TonGaslessWalletConfig} [config] - The configuration object.
      */
-    transfer({ recipient, amount, token, simulate }: any, config: any): Promise<{
-        hash: any;
-        gasCost: number;
-        commission?: undefined;
-    } | {
-        hash: any;
-        commission: number;
-        gasCost?: undefined;
-    }>;
+    constructor(seed: string | Uint8Array, path: string, config?: TonGaslessWalletConfig);
     /**
-     * quoteTransfer
-     * @param {*} opts
-     * @param {*} config
-     * @returns
+     * The ton api client.
+     *
+     * @type {TonApiClient}
+     * @protected
      */
-    quoteTransfer(opts: any, config: any): Promise<{
-        hash: any;
-        gasCost: number;
-        commission?: undefined;
-    } | {
-        hash: any;
-        commission: number;
-        gasCost?: undefined;
-    }>;
+    protected _tonApiClient: TonApiClient;
     /**
-     * _getRelayAddress
-     * @returns
+     * The contract adapter for ton api.
+     *
+     * @protected
+     * @type {ContractAdapter}
      */
-    _getRelayAddress(): Promise<any>;
+    protected _contractAdapter: ContractAdapter;
     /**
-     * _sendGaslessTransaction
-     * @param {*} gaslessParams
-     * @param {*} jettonMasterAddress
-     * @returns
+     * Creates a gasless transfer of a token to another address.
+     *
+     * @param {TransferOptions} options - The transfer's options.
+     * @param {TransferConfig} config - The transfer's configuration.
+     * @returns {Promise<TransferResult>} The transfer's result.
      */
-    _sendGaslessTransaction(gaslessParams: any, jettonMasterAddress: any): Promise<{
-        hash: any;
-        commission: number;
-    }>;
+    transfer({ recipient, amount, token }: TransferOptions, config: TransferConfig): Promise<TransferResult>;
     /**
-     * _getGaslessEstimate
-     * @param {*} jettonMasterAddress
-     * @param {*} boc
-     * @returns
+     * Quotes the costs of a gasless transfer operation.
+     *
+     * @param {TransferOptions} options - The transfer's options.
+     * @param {TransferConfig} config - The transfer's configuration.
+     * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
      */
-    _getGaslessEstimate(jettonMasterAddress: any, boc: any): Promise<any>;
+    quoteTransfer(opts: any, config: TransferConfig): Promise<Omit<TransferResult, "hash">>;
+    /** @private */
+    private _buildGaslessTransfer;
+    /** @private */
+    private _getRelayAddress;
+    /** @private */
+    private _sendGaslessTransaction;
+    /** @private */
+    private _getGaslessEstimate;
 }
+export type TonClient = any;
+export type TransferOptions = any;
+export type TransferResult = any;
 export type TonGaslessWalletConfig = {
     /**
      * - The url of the ton center api, or a instance of the {@link TonClient} class.
@@ -81,6 +64,18 @@ export type TonGaslessWalletConfig = {
      * - The api-key to use to authenticate on tonapi.io.
      */
     tonApiSecretKey?: string;
+    /**
+     * - The paymaster token configuration.
+     */
+    paymasterToken: {
+        address: string;
+    };
+};
+export type TransferConfig = {
+    /**
+     * - The maximum allowed transfer fee.
+     */
+    transferMaxFee: number;
     /**
      * - The paymaster token configuration.
      */
