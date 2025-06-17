@@ -20,23 +20,21 @@ import { Address, beginCell, internal, SendMode, external, toNano, storeMessage 
 
 /** @typedef {import('@ton/ton').TonClient} TonClient */
 
+/** @typedef {import('@wdk/wallet-ton').TonWalletConfig} TonWalletConfig */
+
+/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
+
 /** @typedef {import('@wdk/wallet').TransferOptions} TransferOptions */
 
 /** @typedef {import('@wdk/wallet').TransferResult} TransferResult */
 
 /**
  * @typedef {Object} TonGaslessWalletConfig
+ * @extends TonWalletConfig
  * @property {string | TonClient} [tonCenterUrl] - The url of the ton center api, or a instance of the {@link TonClient} class.
  * @property {string} [tonCenterSecretKey] - The api-key to use to authenticate on the ton center api.
  * @property {string | TonApiClient} [tonApiUrl] - The url of the tonapi.io, or a instance of the {@link TonApiClient} class.
  * @property {string} [tonApiSecretKey] - The api-key to use to authenticate on tonapi.io.
- * @property {Object} paymasterToken - The paymaster token configuration.
- * @property {string} paymasterToken.address - The address of the paymaster token.
- */
-
-/**
- * @typedef {Object} TransferConfig
- * @property {number} transferMaxFee - The maximum allowed transfer fee.
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
  */
@@ -92,7 +90,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
    * Creates a gasless transfer of a token to another address.
    *
    * @param {TransferOptions} options - The transfer's options.
-   * @param {TransferConfig} config - The transfer's configuration.
+   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the ‘paymasterToken’ and ‘transferMaxFee’ options defined in the wallet account configuration.
    * @returns {Promise<TransferResult>} The transfer's result.
    */
   async transfer ({ recipient, amount, token }, config) {
@@ -121,7 +119,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
    * Quotes the costs of a gasless transfer operation.
    *
    * @param {TransferOptions} options - The transfer's options.
-   * @param {TransferConfig} config - The transfer's configuration.
+   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the ‘paymasterToken’ and ‘transferMaxFee’ options defined in the wallet account configuration.
    * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
    */
   async quoteTransfer (opts, config) {
@@ -236,5 +234,15 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
         messages: [{ boc }]
       }
     )
+  }
+
+  /** @private */
+  async sendTransaction() {
+    throw new Error('Unsupported Operation')
+  }
+
+  /** @private */
+  async quoteSendTransaction() {
+    throw new Error('Unsupported Operation')
   }
 }
