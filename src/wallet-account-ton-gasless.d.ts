@@ -62,9 +62,9 @@ export type TonApiClientConfig = {
      */
     url: string;
     /**
-     * - The api-key to use to authenticate on the tonapi.io.
+     * - If set, uses the api-key to authenticate on the tonapi.io.
      */
-    secretKey: string;
+    secretKey?: string;
 };
 export type TonGaslessWalletConfig = any;
 import { TonApiClient } from '@ton-api/client';

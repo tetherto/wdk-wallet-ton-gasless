@@ -37,7 +37,7 @@ import { Address, beginCell, internal, SendMode, external, toNano, storeMessage 
 /**
  * @typedef {Object} TonApiClientConfig
  * @property {string} url - The url for tonapi.io.
- * @property {string} secretKey - The api-key to use to authenticate on the tonapi.io.
+ * @property {string} [secretKey] - If set, uses the api-key to authenticate on the tonapi.io.
  */
 
 /**
