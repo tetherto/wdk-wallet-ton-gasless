@@ -13,8 +13,17 @@
 // limitations under the License.
 'use strict'
 
+/** @typedef {import('@wdk/wallet-ton').FeeRates} FeeRates */
+/** @typedef {import('@wdk/wallet-ton').KeyPair} KeyPair */
+/** @typedef {import('@wdk/wallet-ton').TransactionResult} TransactionResult */
+/** @typedef {import('@wdk/wallet-ton').TransferOptions} TransferOptions */
+/** @typedef {import('@wdk/wallet-ton').TransferResult} TransferResult */
+/** @typedef {import('@wdk/wallet-ton').TonClientConfig} TonClientConfig */
+/** @typedef {import('@wdk/wallet-ton').TonWalletConfig} TonWalletConfig */
+/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
+
 /** @typedef {import('./src/wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
-/** @typedef {import('./src/wallet-account-ton-gasless.js').TransferConfig} TransferConfig */
+/** @typedef {import('./src/wallet-account-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */
 
 export { default } from './src/wallet-manager-ton-gasless.js'
 

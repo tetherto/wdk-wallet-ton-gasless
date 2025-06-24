@@ -14,11 +14,8 @@
 'use strict'
 
 import { WalletAccountTon } from '@wdk/wallet-ton'
-import { ContractAdapter } from '@ton-api/ton-adapter'
 import { TonApiClient } from '@ton-api/client'
 import { Address, beginCell, internal, SendMode, external, toNano, storeMessage } from '@ton/core'
-
-/** @typedef {import('@ton-api/client').TonApiClient} TonApiClient */
 
 /** @typedef {import('@ton/ton').TonClient} TonClient */
 
@@ -27,8 +24,6 @@ import { Address, beginCell, internal, SendMode, external, toNano, storeMessage 
 /** @typedef {import('@ton/ton').WalletContractV5R1} WalletContractV5R1 */
 
 /** @typedef {import('@wdk/wallet-ton').TonWalletConfig} TonWalletConfig */
-
-/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
 
 /** @typedef {import('@wdk/wallet').TransferOptions} TransferOptions */
 
@@ -41,8 +36,14 @@ import { Address, beginCell, internal, SendMode, external, toNano, storeMessage 
  */
 
 /**
+ * @typedef {Object} TonClientConfig
+ * @property {string} url - The url of the ton center api.
+ * @property {string} [secretKey] - If set, uses an api-key to authenticate on the ton center api.
+ */
+
+/**
  * @typedef {Object} TonGaslessWalletConfig
- * @extends TonWalletConfig
+ * @property {TonClientConfig | TonClient} [tonClient] - The ton client configuration, or an instance of the {@link TonClient} class.
  * @property {TonApiClientConfig | TonApiClient} [tonApiClient] - The ton api client configuration, or an instance of the {@link TonApiClient} class.
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
@@ -59,6 +60,14 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   constructor (seed, path, config) {
     super(seed, path, config)
 
+    /**
+     * The ton gasless wallet account configuration.
+     *
+     * @protected
+     * @type {TonGaslessWalletConfig}
+     */
+    this._config = config
+
     if (config.tonApiClient) {
       const { tonApiClient } = config
 
@@ -71,15 +80,18 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       this._tonApiClient = tonApiClient instanceof TonApiClient
         ? tonApiClient
         : new TonApiClient({ baseUrl: tonApiClient.url, apiKey: tonApiClient.secretKey })
-
-      /**
-       * The contract adapter for ton api client.
-       *
-       * @protected
-       * @type {OpenedContract<WalletContractV5R1> | undefined}
-       */
-      this._contractAdapter = new ContractAdapter(this._tonApiClient)
     }
+  }
+
+  /**
+   * Returns the balance of the account for the configured paymaster token.
+   *
+   * @returns {Promise<number>} The token balance (in base unit).
+   */
+  async getPaymasterTokenBalance () {
+    const { paymasterToken } = this._config
+
+    return await this.getTokenBalance(paymasterToken.address)
   }
 
   /**
@@ -133,14 +145,14 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   async _getGaslessTokenTransfer ({ recipient, amount, token }) {
     const destAddress = Address.parse(recipient)
     const jettonWallet = await this._getJettonWalletAddress(token)
-    const relayerAddress = await this._getRelayAddress()
+    const { relayAddress } = await this._tonApiClient.gasless.gaslessConfig()
 
     const jettonTransferPayload = beginCell()
       .storeUint(0xf8a7ea5, 32)
       .storeUint(0, 64)
       .storeCoins(amount)
       .storeAddress(destAddress)
-      .storeAddress(relayerAddress)
+      .storeAddress(relayAddress)
       .storeBit(false)
       .storeCoins(1n)
       .storeMaybeRef(undefined)
@@ -165,13 +177,6 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   }
 
   /** @private */
-  async _getRelayAddress () {
-    const gaslessConfig = await this._tonApiClient.gasless.gaslessConfig()
-
-    return gaslessConfig.relayAddress
-  }
-
-  /** @private */
   async _sendGaslessTransaction (gaslessParams, tokenAddress) {
     const jettonMasterBalance = await this.getTokenBalance(tokenAddress)
 
@@ -179,8 +184,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       throw new Error('Not enough jetton master balance.')
     }
 
-    const contract = this._tonClient.open(this._wallet)
-    const seqno = await contract.getSeqno()
+    const seqno = await this._contract.getSeqno()
 
     const transfer = this._wallet.createTransfer({
       seqno,
@@ -201,8 +205,8 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       .storeWritable(
         storeMessage(
           external({
-            init: seqno === 0 ? contract.init : undefined,
-            to: contract.address,
+            init: seqno === 0 ? this._contract.init : undefined,
+            to: this._contract.address,
             body: transfer
           })
         )
@@ -232,12 +236,10 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
     )
   }
 
-  /** @private */
   async sendTransaction (tx, config) {
     throw new Error('Unsupported Operation')
   }
 
-  /** @private */
   async quoteSendTransaction () {
     throw new Error('Unsupported Operation')
   }

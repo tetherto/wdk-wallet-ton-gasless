@@ -6,6 +6,13 @@ export default class WalletAccountTonGasless {
      */
     constructor(seed: string | Uint8Array, path: string, config?: TonGaslessWalletConfig);
     /**
+     * The ton gasless wallet account configuration.
+     *
+     * @protected
+     * @type {TonGaslessWalletConfig}
+     */
+    protected _config: TonGaslessWalletConfig;
+    /**
      * The ton api client.
      *
      * @protected
@@ -13,12 +20,11 @@ export default class WalletAccountTonGasless {
      */
     protected _tonApiClient: TonApiClient | undefined;
     /**
-     * The contract adapter for ton api client.
+     * Returns the balance of the account for the configured paymaster token.
      *
-     * @protected
-     * @type {OpenedContract<WalletContractV5R1> | undefined}
+     * @returns {Promise<number>} The token balance (in base unit).
      */
-    protected _contractAdapter: OpenedContract<WalletContractV5R1> | undefined;
+    getPaymasterTokenBalance(): Promise<number>;
     /**
      * Creates a gasless transfer of a token to another address.
      *
@@ -38,22 +44,16 @@ export default class WalletAccountTonGasless {
     /** @private */
     private _getGaslessTokenTransfer;
     /** @private */
-    private _getRelayAddress;
-    /** @private */
     private _sendGaslessTransaction;
     /** @private */
     private _getGaslessEstimate;
-    /** @private */
-    private sendTransaction;
-    /** @private */
-    private quoteSendTransaction;
+    sendTransaction(tx: any, config: any): Promise<void>;
+    quoteSendTransaction(): Promise<void>;
 }
-export type TonApiClient = import("@ton-api/client").TonApiClient;
-export type TonClient = any;
-export type OpenedContract = any;
-export type WalletContractV5R1 = any;
+export type TonClient = import("@ton/ton").TonClient;
+export type OpenedContract = import("@ton/ton").OpenedContract;
+export type WalletContractV5R1 = import("@ton/ton").WalletContractV5R1;
 export type TonWalletConfig = import("@wdk/wallet-ton").TonWalletConfig;
-export type TonTransaction = import("@wdk/wallet-ton").TonTransaction;
 export type TransferOptions = import("@wdk/wallet").TransferOptions;
 export type TransferResult = import("@wdk/wallet").TransferResult;
 export type TonApiClientConfig = {
@@ -66,5 +66,31 @@ export type TonApiClientConfig = {
      */
     secretKey?: string;
 };
-export type TonGaslessWalletConfig = any;
+export type TonClientConfig = {
+    /**
+     * - The url of the ton center api.
+     */
+    url: string;
+    /**
+     * - If set, uses an api-key to authenticate on the ton center api.
+     */
+    secretKey?: string;
+};
+export type TonGaslessWalletConfig = {
+    /**
+     * - The ton client configuration, or an instance of the {@link TonClient} class.
+     */
+    tonClient?: TonClientConfig | TonClient;
+    /**
+     * - The ton api client configuration, or an instance of the {@link TonApiClient} class.
+     */
+    tonApiClient?: TonApiClientConfig | TonApiClient;
+    /**
+     * - The paymaster token configuration.
+     */
+    paymasterToken: {
+        address: string;
+    };
+};
 import { TonApiClient } from '@ton-api/client';
+import { TonClient, OpenedContract, WalletContractV5R1 } from '@ton/ton';

@@ -20,6 +20,37 @@ import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
 export default class WalletManagerTonGasless extends WalletManagerTon {
   /**
+   * Creates a new gasless wallet manager for the ton blockchain.
+   *
+   * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
+   * @param {TonGaslessWalletConfig} [config] - The configuration object.
+   */
+  constructor (seed, config = {}) {
+    super(seed, config)
+
+    /**
+     * The ton gasless wallet configuration.
+     *
+     * @protected
+     * @type {TonGaslessWalletConfig}
+     */
+    this._config = config
+  }
+
+  /**
+   * Returns the gasless wallet account at a specific index (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
+   *
+   * @example
+   * // Returns the account with derivation path m/44'/607'/0'/0/1
+   * const account = await wallet.getAccount(1);
+   * @param {number} [index] - The index of the account to get (default: 0).
+   * @returns {Promise<WalletAccountTonGasless>} The gasless account.
+   */
+  async getAccount (index = 0) {
+    return await this.getAccountByPath(`0'/0/${index}`)
+  }
+
+  /**
    * Returns the gasless wallet account at a specific BIP-44 derivation path.
    *
    * @example

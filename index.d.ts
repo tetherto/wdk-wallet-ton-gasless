@@ -1,4 +1,12 @@
 export { default } from "./src/wallet-manager-ton-gasless.js";
 export { default as WalletAccountTonGasless } from "./src/wallet-account-ton-gasless.js";
+export type FeeRates = import("@wdk/wallet-ton").FeeRates;
+export type KeyPair = import("@wdk/wallet-ton").KeyPair;
+export type TransactionResult = import("@wdk/wallet-ton").TransactionResult;
+export type TransferOptions = import("@wdk/wallet-ton").TransferOptions;
+export type TransferResult = import("@wdk/wallet-ton").TransferResult;
+export type TonClientConfig = import("@wdk/wallet-ton").TonClientConfig;
+export type TonWalletConfig = import("@wdk/wallet-ton").TonWalletConfig;
+export type TonTransaction = import("@wdk/wallet-ton").TonTransaction;
 export type TonGaslessWalletConfig = import("./src/wallet-account-ton-gasless.js").TonGaslessWalletConfig;
-export type TransferConfig = import("./src/wallet-account-ton-gasless.js").TransferConfig;
+export type TonApiClientConfig = import("./src/wallet-account-ton-gasless.js").TonApiClientConfig;
