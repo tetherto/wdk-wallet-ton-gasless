@@ -99,7 +99,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
 
     const gasCostInPaymasterToken = Number(gaslessParams.commission)
 
-    if (transferMaxFee && gasCostInPaymasterToken >= transferMaxFee) {
+    if (transferMaxFee !== undefined && gasCostInPaymasterToken >= transferMaxFee) {
       throw new Error('The transfer operation exceeds the transfer max fee.')
     }
 
