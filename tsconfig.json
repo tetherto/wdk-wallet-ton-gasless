@@ -1,8 +1,8 @@
 {
   "include": [
-    "./src/wallet-account-ton-gasless.js",
-    "./src/wallet-manager-ton-gasless.js",
     "index.js",
+    "./src/wallet-manager-ton-gasless.js",
+    "./src/wallet-account-ton-gasless.js"
   ],
   "compilerOptions": {
     "target": "ES2015",
@@ -11,13 +11,6 @@
     "allowJs": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "noResolve": true,
-    "skipLibCheck": true,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules/@ton",
-      "./node_modules/@wdk",
-      "./node_modules/@ton-api"
-    ]
+    "skipLibCheck": true
   }
 }

@@ -1,17 +1,12 @@
-export default class WalletAccountTonGasless {
+export default class WalletAccountTonGasless extends WalletAccountTon {
     /**
+     * Creates a new ton gasless wallet account.
+     *
      * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
      * @param {string} path - The BIP-44 derivation path (e.g. "0'/0/0").
      * @param {TonGaslessWalletConfig} [config] - The configuration object.
      */
     constructor(seed: string | Uint8Array, path: string, config?: TonGaslessWalletConfig);
-    /**
-     * The ton gasless wallet account configuration.
-     *
-     * @protected
-     * @type {TonGaslessWalletConfig}
-     */
-    protected _config: TonGaslessWalletConfig;
     /**
      * The ton api client.
      *
@@ -20,59 +15,53 @@ export default class WalletAccountTonGasless {
      */
     protected _tonApiClient: TonApiClient | undefined;
     /**
-     * Returns the balance of the account for the configured paymaster token.
+     * Returns the account's balance for the paymaster token defined in the wallet account configuration.
      *
-     * @returns {Promise<number>} The token balance (in base unit).
+     * @returns {Promise<number>} The paymaster token balance (in base unit).
      */
     getPaymasterTokenBalance(): Promise<number>;
     /**
-     * Creates a gasless transfer of a token to another address.
+     * Transfers a token to another address.
      *
      * @param {TransferOptions} options - The transfer's options.
-     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the ‘paymasterToken’ and ‘transferMaxFee’ options defined in the wallet account configuration.
+     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
      * @returns {Promise<TransferResult>} The transfer's result.
      */
-    transfer({ recipient, amount, token }: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
+    transfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
     /**
-     * Quotes the costs of a gasless transfer operation.
+     * Quotes the costs of a transfer operation.
      *
+     * @see {@link transfer}
      * @param {TransferOptions} options - The transfer's options.
-     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the ‘paymasterToken’ and ‘transferMaxFee’ options defined in the wallet account configuration.
+     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
      * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
      */
-    quoteTransfer(opts: any, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<Omit<TransferResult, "hash">>;
+    quoteTransfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<Omit<TransferResult, "hash">>;
     /** @private */
     private _getGaslessTokenTransfer;
     /** @private */
-    private _sendGaslessTransaction;
-    /** @private */
-    private _getGaslessEstimate;
-    sendTransaction(tx: any, config: any): Promise<void>;
-    quoteSendTransaction(): Promise<void>;
+    private _sendGaslessTokenTransfer;
 }
 export type TonClient = import("@ton/ton").TonClient;
-export type OpenedContract = import("@ton/ton").OpenedContract;
-export type WalletContractV5R1 = import("@ton/ton").WalletContractV5R1;
-export type TonWalletConfig = import("@wdk/wallet-ton").TonWalletConfig;
 export type TransferOptions = import("@wdk/wallet").TransferOptions;
 export type TransferResult = import("@wdk/wallet").TransferResult;
-export type TonApiClientConfig = {
-    /**
-     * - The url for tonapi.io.
-     */
-    url: string;
-    /**
-     * - If set, uses the api-key to authenticate on the tonapi.io.
-     */
-    secretKey?: string;
-};
 export type TonClientConfig = {
     /**
      * - The url of the ton center api.
      */
     url: string;
     /**
-     * - If set, uses an api-key to authenticate on the ton center api.
+     * - If set, uses the api-key to authenticate on the ton center api.
+     */
+    secretKey?: string;
+};
+export type TonApiClientConfig = {
+    /**
+     * - The url of the ton api.
+     */
+    url: string;
+    /**
+     * - If set, uses the api-key to authenticate on the ton api.
      */
     secretKey?: string;
 };
@@ -92,5 +81,5 @@ export type TonGaslessWalletConfig = {
         address: string;
     };
 };
+import { WalletAccountTon } from '@wdk/wallet-ton';
 import { TonApiClient } from '@ton-api/client';
-import { TonClient, OpenedContract, WalletContractV5R1 } from '@ton/ton';

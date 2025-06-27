@@ -14,31 +14,26 @@
 'use strict'
 
 import { WalletAccountTon } from '@wdk/wallet-ton'
-import { TonApiClient } from '@ton-api/client'
+
 import { Address, beginCell, internal, SendMode, external, toNano, storeMessage } from '@ton/core'
+
+import { TonApiClient } from '@ton-api/client'
 
 /** @typedef {import('@ton/ton').TonClient} TonClient */
 
-/** @typedef {import('@ton/ton').OpenedContract} OpenedContract */
-
-/** @typedef {import('@ton/ton').WalletContractV5R1} WalletContractV5R1 */
-
-/** @typedef {import('@wdk/wallet-ton').TonWalletConfig} TonWalletConfig */
-
 /** @typedef {import('@wdk/wallet').TransferOptions} TransferOptions */
-
 /** @typedef {import('@wdk/wallet').TransferResult} TransferResult */
-
-/**
- * @typedef {Object} TonApiClientConfig
- * @property {string} url - The url for tonapi.io.
- * @property {string} [secretKey] - If set, uses the api-key to authenticate on the tonapi.io.
- */
 
 /**
  * @typedef {Object} TonClientConfig
  * @property {string} url - The url of the ton center api.
- * @property {string} [secretKey] - If set, uses an api-key to authenticate on the ton center api.
+ * @property {string} [secretKey] - If set, uses the api-key to authenticate on the ton center api.
+ */
+
+/**
+ * @typedef {Object} TonApiClientConfig
+ * @property {string} url - The url of the ton api.
+ * @property {string} [secretKey] - If set, uses the api-key to authenticate on the ton api.
  */
 
 /**
@@ -53,6 +48,8 @@ const DUMMY_MESSAGE_VALUE = toNano(0.05)
 
 export default class WalletAccountTonGasless extends WalletAccountTon {
   /**
+   * Creates a new ton gasless wallet account.
+   * 
    * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
    * @param {string} path - The BIP-44 derivation path (e.g. "0'/0/0").
    * @param {TonGaslessWalletConfig} [config] - The configuration object.
@@ -84,9 +81,9 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   }
 
   /**
-   * Returns the balance of the account for the configured paymaster token.
+   * Returns the account's balance for the paymaster token defined in the wallet account configuration.
    *
-   * @returns {Promise<number>} The token balance (in base unit).
+   * @returns {Promise<number>} The paymaster token balance (in base unit).
    */
   async getPaymasterTokenBalance () {
     const { paymasterToken } = this._config
@@ -94,114 +91,119 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
     return await this.getTokenBalance(paymasterToken.address)
   }
 
+  async sendTransaction (tx) {
+    throw new Error("Method 'sendTransaction(tx)' not supported on ton gasless.")
+  }
+
+  async quoteSendTransaction (tx) {
+    throw new Error("Method 'quoteSendTransaction(tx)' not supported on ton gasless.")
+  }
+
   /**
-   * Creates a gasless transfer of a token to another address.
+   * Transfers a token to another address.
    *
    * @param {TransferOptions} options - The transfer's options.
-   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the ‘paymasterToken’ and ‘transferMaxFee’ options defined in the wallet account configuration.
+   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
    * @returns {Promise<TransferResult>} The transfer's result.
    */
-  async transfer ({ recipient, amount, token }, config) {
+  async transfer (options, config) {
     const { paymasterToken, transferMaxFee } = config ?? this._config
-    const { internalMessage, messageToEstimate } = await this._getGaslessTokenTransfer({ recipient, amount, token })
-    const gaslessParams = await this._getGaslessEstimate(
-      Address.parse(paymasterToken.address),
-      messageToEstimate
-    )
 
-    const gasCostInPaymasterToken = Number(gaslessParams.commission)
+    const { rawParams, hash } = await this._getGaslessTokenTransfer(options, { paymasterToken })
 
-    if (transferMaxFee !== undefined && gasCostInPaymasterToken >= transferMaxFee) {
+    const fee = Number(rawParams.commission)
+
+    if (transferMaxFee !== undefined && fee >= transferMaxFee) {
       throw new Error('The transfer operation exceeds the transfer max fee.')
     }
 
-    await this._sendGaslessTransaction(gaslessParams, token)
+    await this._sendGaslessTokenTransfer(rawParams)
 
-    return {
-      hash: this._getHash(internalMessage).toString('hex'),
-      fee: gasCostInPaymasterToken
-    }
+    return { hash, fee }
   }
 
   /**
-   * Quotes the costs of a gasless transfer operation.
+   * Quotes the costs of a transfer operation.
    *
+   * @see {@link transfer}
    * @param {TransferOptions} options - The transfer's options.
-   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the ‘paymasterToken’ and ‘transferMaxFee’ options defined in the wallet account configuration.
+   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
    * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
    */
-  async quoteTransfer (opts, config) {
-    const { paymasterToken } = config ?? this._config
-    const { messageToEstimate } = await this._getGaslessTokenTransfer(opts)
-    const gaslessParams = await this._getGaslessEstimate(
-      Address.parse(paymasterToken.address),
-      messageToEstimate
-    )
+  async quoteTransfer (options, config) {
+    const { rawParams } = await this._getGaslessTokenTransfer(options, config ?? this._config)
 
-    return { fee: Number(gaslessParams.commission) }
+    const fee = Number(rawParams.commission)
+
+    return { fee }
   }
 
   /** @private */
-  async _getGaslessTokenTransfer ({ recipient, amount, token }) {
-    const destAddress = Address.parse(recipient)
-    const jettonWallet = await this._getJettonWalletAddress(token)
+  async _getGaslessTokenTransfer ({ token, recipient, amount }, { paymasterToken }) {
+    recipient = Address.parse(recipient)
+
     const { relayAddress } = await this._tonApiClient.gasless.gaslessConfig()
 
-    const jettonTransferPayload = beginCell()
+    const jettonWalletAddress = await this._getJettonWalletAddress(token)
+
+    const body = beginCell()
       .storeUint(0xf8a7ea5, 32)
       .storeUint(0, 64)
       .storeCoins(amount)
-      .storeAddress(destAddress)
+      .storeAddress(recipient)
       .storeAddress(relayAddress)
       .storeBit(false)
       .storeCoins(1n)
       .storeMaybeRef(undefined)
       .endCell()
 
-    const internalMessage = internal({
-      to: jettonWallet,
-      bounce: true,
+    const message = internal({
+      to: jettonWalletAddress,
       value: DUMMY_MESSAGE_VALUE,
-      body: jettonTransferPayload
+      bounce: true,
+      body
     })
 
-    const messageToEstimate = beginCell()
-      .storeWritable(
-        storeMessage(
-          internalMessage
-        )
-      )
-      .endCell()
+    const rawParams = await this._tonApiClient.gasless.gaslessEstimate(
+      Address.parse(paymasterToken.address),
+      {
+        walletAddress: this._wallet.address,
+        walletPublicKey: Buffer.from(this._wallet.publicKey).toString('hex'),
+        messages: [{
+          boc: beginCell()
+            .storeWritable(
+              storeMessage(message)
+            )
+            .endCell()
+        }]
+      }
+    )
 
-    return { internalMessage, messageToEstimate }
+    const hash = this._getHash(message).toString('hex')
+
+    return { rawParams, hash }
   }
 
   /** @private */
-  async _sendGaslessTransaction (gaslessParams, tokenAddress) {
-    const jettonMasterBalance = await this.getTokenBalance(tokenAddress)
-
-    if (jettonMasterBalance < Number(gaslessParams.commission)) {
-      throw new Error('Not enough jetton master balance.')
-    }
-
+  async _sendGaslessTokenTransfer (rawParams) {
     const seqno = await this._contract.getSeqno()
 
-    const transfer = this._wallet.createTransfer({
+    const transfer = this._contract.createTransfer({
       seqno,
       authType: 'internal',
-      timeout: Math.ceil(Date.now() / 1000) + 60,
       secretKey: this.keyPair.privateKey,
       sendMode: SendMode.PAY_GAS_SEPARATELY + SendMode.IGNORE_ERRORS,
-      messages: gaslessParams.messages.map(message =>
+      timeout: Math.ceil(Date.now() / 1_000) + 2 * 60,
+      messages: rawParams.messages.map(message =>
         internal({
           to: message.address,
-          value: BigInt(message.amount),
+          value: message.amount,
           body: message.payload
         })
       )
     })
 
-    const message = beginCell()
+    const boc = beginCell()
       .storeWritable(
         storeMessage(
           external({
@@ -214,33 +216,8 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       .endCell()
 
     await this._tonApiClient.gasless.gaslessSend({
-      walletPublicKey: Buffer.from(this.keyPair.publicKey).toString('hex'),
-      boc: message
+      walletPublicKey: Buffer.from(this._wallet.publicKey).toString('hex'),
+      boc
     })
-
-    return {
-      hash: null,
-      commission: Number(gaslessParams.commission)
-    }
-  }
-
-  /** @private */
-  async _getGaslessEstimate (jettonMasterAddress, boc) {
-    return await this._tonApiClient.gasless.gaslessEstimate(
-      jettonMasterAddress,
-      {
-        walletAddress: this._wallet.address,
-        walletPublicKey: Buffer.from(this._wallet.publicKey).toString('hex'),
-        messages: [{ boc }]
-      }
-    )
-  }
-
-  async sendTransaction (tx, config) {
-    throw new Error('Unsupported Operation')
-  }
-
-  async quoteSendTransaction () {
-    throw new Error('Unsupported Operation')
   }
 }

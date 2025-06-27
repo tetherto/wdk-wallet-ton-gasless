@@ -14,10 +14,9 @@
     "url": "git+https://github.com/tetherto/wdk-wallet-ton-gasless.git"
   },
   "dependencies": {
-    "@wdk/wallet-ton": "https://github.com/tetherto/wdk-wallet-ton#develop",
     "@ton-api/client": "0.4.0",
-    "@ton-api/ton-adapter": "0.4.1",
-    "@ton/ton": "15.2.1"
+    "@ton/ton": "^15.3.0",
+    "@wdk/wallet-ton": "https://github.com/tetherto/wdk-wallet-ton#develop"
   },
   "devDependencies": {
     "rimraf": "6.0.1",
