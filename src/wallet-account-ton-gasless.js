@@ -197,7 +197,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       messages: rawParams.messages.map(message =>
         internal({
           to: message.address,
-          value: message.amount,
+          value: BigInt(message.amount),
           body: message.payload
         })
       )
