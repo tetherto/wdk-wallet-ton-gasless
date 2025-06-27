@@ -1,0 +1,29 @@
+// Copyright 2024 Tether Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+'use strict'
+
+/** @typedef {import('@wdk/wallet-ton').FeeRates} FeeRates */
+/** @typedef {import('@wdk/wallet-ton').KeyPair} KeyPair */
+/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
+/** @typedef {import('@wdk/wallet-ton').TransactionResult} TransactionResult */
+/** @typedef {import('@wdk/wallet-ton').TransferOptions} TransferOptions */
+/** @typedef {import('@wdk/wallet-ton').TransferResult} TransferResult */
+
+/** @typedef {import('./src/wallet-account-ton-gasless.js').TonClientConfig} TonClientConfig */
+/** @typedef {import('./src/wallet-account-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */
+/** @typedef {import('./src/wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
+
+export { default } from './src/wallet-manager-ton-gasless.js'
+
+export { default as WalletAccountTonGasless } from './src/wallet-account-ton-gasless.js'

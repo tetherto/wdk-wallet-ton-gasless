@@ -1,0 +1,16 @@
+{
+  "include": [
+    "index.js",
+    "./src/wallet-manager-ton-gasless.js",
+    "./src/wallet-account-ton-gasless.js"
+  ],
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "skipLibCheck": true
+  }
+}
