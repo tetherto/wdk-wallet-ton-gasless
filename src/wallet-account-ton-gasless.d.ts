@@ -4,9 +4,9 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
      *
      * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
      * @param {string} path - The BIP-44 derivation path (e.g. "0'/0/0").
-     * @param {TonGaslessWalletConfig} [config] - The configuration object.
+     * @param {TonGaslessWalletConfig} config - The configuration object.
      */
-    constructor(seed: string | Uint8Array, path: string, config?: TonGaslessWalletConfig);
+    constructor(seed: string | Uint8Array, path: string, config: TonGaslessWalletConfig);
     /**
      * The ton api client.
      *
@@ -69,17 +69,21 @@ export type TonGaslessWalletConfig = {
     /**
      * - The ton client configuration, or an instance of the {@link TonClient} class.
      */
-    tonClient?: TonClientConfig | TonClient;
+    tonClient: TonClientConfig | TonClient;
     /**
      * - The ton api client configuration, or an instance of the {@link TonApiClient} class.
      */
-    tonApiClient?: TonApiClientConfig | TonApiClient;
+    tonApiClient: TonApiClientConfig | TonApiClient;
     /**
      * - The paymaster token configuration.
      */
     paymasterToken: {
         address: string;
     };
+    /**
+     * - The maximum fee amount for transfer operations.
+     */
+    transferMaxFee?: number;
 };
 import { WalletAccountTon } from '@wdk/wallet-ton';
 import { TonApiClient } from '@ton-api/client';

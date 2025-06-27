@@ -4,9 +4,9 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
      * Creates a new wallet manager for the ton blockchain that implements gasless features.
      *
      * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
-     * @param {TonGaslessWalletConfig} [config] - The configuration object.
+     * @param {TonGaslessWalletConfig} config - The configuration object.
      */
-    constructor(seed: string | Uint8Array, config?: TonGaslessWalletConfig);
+    constructor(seed: string | Uint8Array, config: TonGaslessWalletConfig);
     /**
      * Returns the wallet account at a specific index (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
      *
