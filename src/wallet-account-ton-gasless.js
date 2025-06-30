@@ -15,7 +15,7 @@
 
 import { WalletAccountTon } from '@wdk/wallet-ton'
 
-import { Address, beginCell, internal, SendMode, external, toNano, storeMessage } from '@ton/core'
+import { Address, beginCell, internal, SendMode, external, toNano, storeMessage } from '@ton/ton'
 
 import { TonApiClient } from '@ton-api/client'
 
