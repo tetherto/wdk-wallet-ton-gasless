@@ -4,18 +4,16 @@
   "description": "A simple package to manage BIP-32 wallets for the TON blockchain, which implement the gasless functionality",
   "main": "index.js",
   "type": "module",
+  "types": "./types",
   "scripts": {
     "build:types": "rimraf *.d.ts **/*.d.ts; tsc",
     "lint": "standard",
     "lint:fix": "standard --fix"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tetherto/wdk-wallet-ton-gasless.git"
-  },
   "dependencies": {
     "@ton-api/client": "0.4.0",
-    "@ton/ton": "^15.3.0",
+    "@ton/ton": "15.3.0",
+    "@wdk/wallet": "https://github.com/tetherto/wdk-wallet#develop",
     "@wdk/wallet-ton": "https://github.com/tetherto/wdk-wallet-ton#develop"
   },
   "devDependencies": {
