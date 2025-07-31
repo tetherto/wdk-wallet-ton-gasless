@@ -14,16 +14,20 @@
 'use strict'
 
 /** @typedef {import('@wdk/wallet-ton').FeeRates} FeeRates */
+
 /** @typedef {import('@wdk/wallet-ton').KeyPair} KeyPair */
 /** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
 /** @typedef {import('@wdk/wallet-ton').TransactionResult} TransactionResult */
 /** @typedef {import('@wdk/wallet-ton').TransferOptions} TransferOptions */
 /** @typedef {import('@wdk/wallet-ton').TransferResult} TransferResult */
+/** @typedef {import('@wdk/wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
 
-/** @typedef {import('./src/wallet-account-ton-gasless.js').TonClientConfig} TonClientConfig */
-/** @typedef {import('./src/wallet-account-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */
-/** @typedef {import('./src/wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
+/** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonClientConfig} TonClientConfig */
+/** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */
+/** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
 
 export { default } from './src/wallet-manager-ton-gasless.js'
+
+export { default as WalletAccountReadOnlyTonGasless } from './src/wallet-account-read-only-ton-gasless.js'
 
 export { default as WalletAccountTonGasless } from './src/wallet-account-ton-gasless.js'

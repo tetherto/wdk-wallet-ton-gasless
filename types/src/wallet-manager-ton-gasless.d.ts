@@ -1,5 +1,4 @@
-/** @typedef {import('./wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
-export default class WalletManagerTonGasless extends WalletManagerTon {
+export default class WalletManagerTonGasless extends AbstractWalletManager {
     /**
      * Creates a new wallet manager for the ton blockchain that implements gasless features.
      *
@@ -7,6 +6,15 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
      * @param {TonGaslessWalletConfig} config - The configuration object.
      */
     constructor(seed: string | Uint8Array, config: TonGaslessWalletConfig);
+    /**
+     * The ton gasless wallet configuration.
+     *
+     * @protected
+     * @type {TonGaslessWalletConfig}
+     */
+    protected _config: TonGaslessWalletConfig;
+    /** @private */
+    private _accounts;
     /**
      * Returns the wallet account at a specific index (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
      *
@@ -27,7 +35,18 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
      * @returns {Promise<WalletAccountTonGasless>} The account.
      */
     getAccountByPath(path: string): Promise<WalletAccountTonGasless>;
+    /**
+     * Returns the current fee rates.
+     *
+     * @returns {Promise<FeeRates>} The fee rates (in nanotons).
+     */
+    getFeeRates(): Promise<FeeRates>;
+    /**
+     * Disposes all the wallet accounts, erasing their private keys from the memory.
+     */
+    dispose(): void;
 }
+export type FeeRates = import("@wdk/wallet-ton").FeeRates;
 export type TonGaslessWalletConfig = import("./wallet-account-ton-gasless.js").TonGaslessWalletConfig;
-import WalletManagerTon from '@wdk/wallet-ton';
+import AbstractWalletManager from '@wdk/wallet';
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js';

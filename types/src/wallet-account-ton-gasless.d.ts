@@ -1,4 +1,5 @@
-export default class WalletAccountTonGasless extends WalletAccountTon {
+/** @implements {IWalletAccount} */
+export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGasless implements IWalletAccount {
     /**
      * Creates a new ton gasless wallet account.
      *
@@ -8,18 +9,54 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
      */
     constructor(seed: string | Uint8Array, path: string, config: TonGaslessWalletConfig);
     /**
-     * The ton api client.
+     * The ton gasless wallet account configuration.
      *
      * @protected
-     * @type {TonApiClient | undefined}
+     * @type {TonGaslessWalletConfig}
      */
-    protected _tonApiClient: TonApiClient | undefined;
+    protected _config: TonGaslessWalletConfig;
+    /** @private */
+    private _tonAccount;
     /**
-     * Returns the account's balance for the paymaster token defined in the wallet account configuration.
+     * The derivation path's index of this account.
      *
-     * @returns {Promise<number>} The paymaster token balance (in base unit).
+     * @type {number}
      */
-    getPaymasterTokenBalance(): Promise<number>;
+    get index(): number;
+    /**
+     * The derivation path of this account (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
+     *
+     * @type {string}
+     */
+    get path(): string;
+    /**
+     * The account's key pair.
+     *
+     * @type {KeyPair}
+     */
+    get keyPair(): KeyPair;
+    /**
+     * Signs a message.
+     *
+     * @param {string} message - The message to sign.
+     * @returns {Promise<string>} The message's signature.
+     */
+    sign(message: string): Promise<string>;
+    /**
+     * Verifies a message's signature.
+     *
+     * @param {string} message - The original message.
+     * @param {string} signature - The signature to verify.
+     * @returns {Promise<boolean>} True if the signature is valid.
+     */
+    verify(message: string, signature: string): Promise<boolean>;
+    /**
+     * Sends a transaction.
+     *
+     * @param {TonTransaction} tx -  The transaction.
+     * @returns {Promise<TransactionResult>} The transaction's result.
+     */
+    sendTransaction(tx: TonTransaction): Promise<TransactionResult>;
     /**
      * Transfers a token to another address.
      *
@@ -29,61 +66,17 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
      */
     transfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
     /**
-     * Quotes the costs of a transfer operation.
-     *
-     * @see {@link transfer}
-     * @param {TransferOptions} options - The transfer's options.
-     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
-     * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
+     * Disposes the wallet account, erasing the private key from the memory.
      */
-    quoteTransfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<Omit<TransferResult, "hash">>;
-    /** @private */
-    private _getGaslessTokenTransfer;
+    dispose(): void;
     /** @private */
     private _sendGaslessTokenTransfer;
 }
-export type TonClient = import("@ton/ton").TonClient;
-export type TransferOptions = import("@wdk/wallet").TransferOptions;
-export type TransferResult = import("@wdk/wallet").TransferResult;
-export type TonClientConfig = {
-    /**
-     * - The url of the ton center api.
-     */
-    url: string;
-    /**
-     * - If set, uses the api-key to authenticate on the ton center api.
-     */
-    secretKey?: string;
-};
-export type TonApiClientConfig = {
-    /**
-     * - The url of the ton api.
-     */
-    url: string;
-    /**
-     * - If set, uses the api-key to authenticate on the ton api.
-     */
-    secretKey?: string;
-};
-export type TonGaslessWalletConfig = {
-    /**
-     * - The ton client configuration, or an instance of the {@link TonClient} class.
-     */
-    tonClient: TonClientConfig | TonClient;
-    /**
-     * - The ton api client configuration, or an instance of the {@link TonApiClient} class.
-     */
-    tonApiClient: TonApiClientConfig | TonApiClient;
-    /**
-     * - The paymaster token configuration.
-     */
-    paymasterToken: {
-        address: string;
-    };
-    /**
-     * - The maximum fee amount for transfer operations.
-     */
-    transferMaxFee?: number;
-};
-import { WalletAccountTon } from '@wdk/wallet-ton';
-import { TonApiClient } from '@ton-api/client';
+export type IWalletAccount = import("@wdk/wallet").IWalletAccount;
+export type KeyPair = import("@wdk/wallet-ton").KeyPair;
+export type TonTransaction = import("@wdk/wallet-ton").TonTransaction;
+export type TransactionResult = import("@wdk/wallet-ton").TransactionResult;
+export type TransferOptions = import("@wdk/wallet-ton").TransferOptions;
+export type TransferResult = import("@wdk/wallet-ton").TransferResult;
+export type TonGaslessWalletConfig = import("./wallet-account-read-only-ton-gasless.js").TonGaslessWalletConfig;
+import WalletAccountReadOnlyTonGasless from './wallet-account-read-only-ton-gasless.js';

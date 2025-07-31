@@ -15,39 +15,23 @@
 
 import { WalletAccountTon } from '@wdk/wallet-ton'
 
-import { Address, beginCell, internal, SendMode, external, toNano, storeMessage } from '@ton/ton'
+import { beginCell, internal, SendMode, external, storeMessage } from '@ton/ton'
 
-import { TonApiClient } from '@ton-api/client'
+import WalletAccountReadOnlyTonGasless from './wallet-account-read-only-ton-gasless.js'
 
-/** @typedef {import('@ton/ton').TonClient} TonClient */
+/** @typedef {import('@wdk/wallet').IWalletAccount} IWalletAccount */
 
-/** @typedef {import('@wdk/wallet').TransferOptions} TransferOptions */
-/** @typedef {import('@wdk/wallet').TransferResult} TransferResult */
+/** @typedef {import('@wdk/wallet-ton').KeyPair} KeyPair */
 
-/**
- * @typedef {Object} TonClientConfig
- * @property {string} url - The url of the ton center api.
- * @property {string} [secretKey] - If set, uses the api-key to authenticate on the ton center api.
- */
+/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
+/** @typedef {import('@wdk/wallet-ton').TransactionResult} TransactionResult */
+/** @typedef {import('@wdk/wallet-ton').TransferOptions} TransferOptions */
+/** @typedef {import('@wdk/wallet-ton').TransferResult} TransferResult */
 
-/**
- * @typedef {Object} TonApiClientConfig
- * @property {string} url - The url of the ton api.
- * @property {string} [secretKey] - If set, uses the api-key to authenticate on the ton api.
- */
+/** @typedef {import('./wallet-account-read-only-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
 
-/**
- * @typedef {Object} TonGaslessWalletConfig
- * @property {TonClientConfig | TonClient} tonClient - The ton client configuration, or an instance of the {@link TonClient} class.
- * @property {TonApiClientConfig | TonApiClient} tonApiClient - The ton api client configuration, or an instance of the {@link TonApiClient} class.
- * @property {Object} paymasterToken - The paymaster token configuration.
- * @property {string} paymasterToken.address - The address of the paymaster token.
- * @property {number} [transferMaxFee] - The maximum fee amount for transfer operations.
- */
-
-const DUMMY_MESSAGE_VALUE = toNano(0.05)
-
-export default class WalletAccountTonGasless extends WalletAccountTon {
+/** @implements {IWalletAccount} */
+export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGasless {
   /**
    * Creates a new ton gasless wallet account.
    * 
@@ -56,7 +40,9 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
    * @param {TonGaslessWalletConfig} config - The configuration object.
    */
   constructor (seed, path, config) {
-    super(seed, path, config)
+    const tonAccount = new WalletAccountTon(seed, path, config)
+
+    super(tonAccount.keyPair.publicKey, config)
 
     /**
      * The ton gasless wallet account configuration.
@@ -66,38 +52,66 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
      */
     this._config = config
 
-    if (config.tonApiClient) {
-      const { tonApiClient } = config
-
-      /**
-       * The ton api client.
-       *
-       * @protected
-       * @type {TonApiClient | undefined}
-       */
-      this._tonApiClient = tonApiClient instanceof TonApiClient
-        ? tonApiClient
-        : new TonApiClient({ baseUrl: tonApiClient.url, apiKey: tonApiClient.secretKey })
-    }
+    /** @private */
+    this._tonAccount = tonAccount
   }
 
   /**
-   * Returns the account's balance for the paymaster token defined in the wallet account configuration.
+   * The derivation path's index of this account.
    *
-   * @returns {Promise<number>} The paymaster token balance (in base unit).
+   * @type {number}
    */
-  async getPaymasterTokenBalance () {
-    const { paymasterToken } = this._config
-
-    return await this.getTokenBalance(paymasterToken.address)
+  get index () {
+    return this._tonAccount.index
   }
 
+  /**
+   * The derivation path of this account (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
+   *
+   * @type {string}
+   */
+  get path () {
+    return this._tonAccount.path
+  }
+
+  /**
+   * The account's key pair.
+   *
+   * @type {KeyPair}
+   */
+  get keyPair () {
+    return this._tonAccount.keyPair
+  }
+
+  /**
+   * Signs a message.
+   *
+   * @param {string} message - The message to sign.
+   * @returns {Promise<string>} The message's signature.
+   */
+  async sign (message) {
+    return await this._tonAccount.sign(message)
+  }
+
+  /**
+   * Verifies a message's signature.
+   *
+   * @param {string} message - The original message.
+   * @param {string} signature - The signature to verify.
+   * @returns {Promise<boolean>} True if the signature is valid.
+   */
+  async verify (message, signature) {
+    return await this._tonAccount.verify(message, signature)
+  }
+
+  /**
+   * Sends a transaction.
+   *
+   * @param {TonTransaction} tx -  The transaction.
+   * @returns {Promise<TransactionResult>} The transaction's result.
+   */
   async sendTransaction (tx) {
     throw new Error("Method 'sendTransaction(tx)' not supported on ton gasless.")
-  }
-
-  async quoteSendTransaction (tx) {
-    throw new Error("Method 'quoteSendTransaction(tx)' not supported on ton gasless.")
   }
 
   /**
@@ -110,8 +124,8 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
   async transfer (options, config) {
     const { paymasterToken, transferMaxFee } = config ?? this._config
 
-    const { rawParams, hash } = await this._getGaslessTokenTransfer(options, { paymasterToken })
-
+    const message = await this._getGaslessTokenTransferMessage(options)
+    const rawParams = await this._getGaslessTokenTransferRawParams(message, { paymasterToken })
     const fee = Number(rawParams.commission)
 
     if (transferMaxFee !== undefined && fee >= transferMaxFee) {
@@ -120,76 +134,26 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
 
     await this._sendGaslessTokenTransfer(rawParams)
 
-    return { hash, fee }
+    return { 
+      hash: this._tonAccount._getMessageHash(message), 
+      fee 
+    }
   }
 
   /**
-   * Quotes the costs of a transfer operation.
-   *
-   * @see {@link transfer}
-   * @param {TransferOptions} options - The transfer's options.
-   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
-   * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
+   * Disposes the wallet account, erasing the private key from the memory.
    */
-  async quoteTransfer (options, config) {
-    const { rawParams } = await this._getGaslessTokenTransfer(options, config ?? this._config)
-
-    const fee = Number(rawParams.commission)
-
-    return { fee }
-  }
-
-  /** @private */
-  async _getGaslessTokenTransfer ({ token, recipient, amount }, { paymasterToken }) {
-    recipient = Address.parse(recipient)
-
-    const { relayAddress } = await this._tonApiClient.gasless.gaslessConfig()
-
-    const jettonWalletAddress = await this._getJettonWalletAddress(token)
-
-    const body = beginCell()
-      .storeUint(0xf8a7ea5, 32)
-      .storeUint(0, 64)
-      .storeCoins(amount)
-      .storeAddress(recipient)
-      .storeAddress(relayAddress)
-      .storeBit(false)
-      .storeCoins(1n)
-      .storeMaybeRef(undefined)
-      .endCell()
-
-    const message = internal({
-      to: jettonWalletAddress,
-      value: DUMMY_MESSAGE_VALUE,
-      bounce: true,
-      body
-    })
-
-    const rawParams = await this._tonApiClient.gasless.gaslessEstimate(
-      Address.parse(paymasterToken.address),
-      {
-        walletAddress: this._wallet.address,
-        walletPublicKey: Buffer.from(this._wallet.publicKey).toString('hex'),
-        messages: [{
-          boc: beginCell()
-            .storeWritable(
-              storeMessage(message)
-            )
-            .endCell()
-        }]
-      }
-    )
-
-    const hash = this._getHash(message).toString('hex')
-
-    return { rawParams, hash }
+  dispose () {
+    this._tonAccount.dispose()
   }
 
   /** @private */
   async _sendGaslessTokenTransfer (rawParams) {
-    const seqno = await this._contract.getSeqno()
+    const contract = this._tonAccount._contract
 
-    const transfer = this._contract.createTransfer({
+    const seqno = await contract.getSeqno()
+
+    const transfer = contract.createTransfer({
       seqno,
       authType: 'internal',
       secretKey: this.keyPair.privateKey,
@@ -208,8 +172,8 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       .storeWritable(
         storeMessage(
           external({
-            init: seqno === 0 ? this._contract.init : undefined,
-            to: this._contract.address,
+            init: seqno === 0 ? contract.init : undefined,
+            to: contract.address,
             body: transfer
           })
         )
@@ -217,7 +181,7 @@ export default class WalletAccountTonGasless extends WalletAccountTon {
       .endCell()
 
     await this._tonApiClient.gasless.gaslessSend({
-      walletPublicKey: Buffer.from(this._wallet.publicKey).toString('hex'),
+      walletPublicKey: Buffer.from(this.keyPair.publicKey).toString('hex'),
       boc
     })
   }

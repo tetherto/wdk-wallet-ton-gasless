@@ -2,7 +2,8 @@
   "include": [
     "index.js",
     "./src/wallet-manager-ton-gasless.js",
-    "./src/wallet-account-ton-gasless.js"
+    "./src/wallet-account-ton-gasless.js",
+    "./src/wallet-account-read-only-ton-gasless.js"
   ],
   "compilerOptions": {
     "target": "ES2015",

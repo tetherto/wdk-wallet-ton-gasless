@@ -14,13 +14,17 @@
 
 'use strict'
 
-import WalletManagerTon from '@wdk/wallet-ton'
+import AbstractWalletManager from '@wdk/wallet'
 
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
+/** @typedef {import('@wdk/wallet-ton').FeeRates} FeeRates */
+
 /** @typedef {import('./wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
 
-export default class WalletManagerTonGasless extends WalletManagerTon {
+const TON_API_URL = 'https://tonapi.io/v2'
+
+export default class WalletManagerTonGasless extends AbstractWalletManager {
   /**
    * Creates a new wallet manager for the ton blockchain that implements gasless features.
    *
@@ -37,6 +41,9 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
      * @type {TonGaslessWalletConfig}
      */
     this._config = config
+
+    /** @private */
+    this._accounts = {}
   }
 
   /**
@@ -69,5 +76,36 @@ export default class WalletManagerTonGasless extends WalletManagerTon {
     }
 
     return this._accounts[path]
+  }
+
+  /**
+   * Returns the current fee rates.
+   *
+   * @returns {Promise<FeeRates>} The fee rates (in nanotons).
+   */
+  async getFeeRates () {
+    /* eslint-disable camelcase */
+
+    const response = await fetch(`${TON_API_URL}/blockchain/config/raw`)
+
+    const { config: { config_param21 } } = await response.json()
+    const gasPrice = config_param21.gas_limits_prices.gas_flat_pfx.other.gas_prices_ext.gas_price
+    const feeRate = Math.round(gasPrice / 65_536)
+
+    return {
+      normal: feeRate,
+      fast: feeRate
+    }
+  }
+
+  /**
+   * Disposes all the wallet accounts, erasing their private keys from the memory.
+   */
+  dispose () {
+    for (const account of Object.values(this._accounts)) {
+      account.dispose()
+    }
+
+    this._accounts = {}
   }
 }
