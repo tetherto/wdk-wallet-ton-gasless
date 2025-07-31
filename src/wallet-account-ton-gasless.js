@@ -34,7 +34,7 @@ import WalletAccountReadOnlyTonGasless from './wallet-account-read-only-ton-gasl
 export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGasless {
   /**
    * Creates a new ton gasless wallet account.
-   * 
+   *
    * @param {string | Uint8Array} seed - The wallet's [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed phrase.
    * @param {string} path - The BIP-44 derivation path (e.g. "0'/0/0").
    * @param {TonGaslessWalletConfig} config - The configuration object.
@@ -134,9 +134,9 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
 
     await this._sendGaslessTokenTransfer(rawParams)
 
-    return { 
-      hash: this._tonAccount._getMessageHash(message), 
-      fee 
+    return {
+      hash: this._tonAccount._getMessageHash(message),
+      fee
     }
   }
 

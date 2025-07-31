@@ -58,7 +58,7 @@ const DUMMY_MESSAGE_VALUE = toNano(0.05)
 export default class WalletAccountReadOnlyTonGasless extends AbstractWalletAccountReadOnly {
   /**
    * Creates a new read-only ton gasless wallet account.
-   * 
+   *
    * @param {string | Uint8Array} publicKey - The account's public key.
    * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee'>} config - The configuration object.
    */
@@ -162,7 +162,7 @@ export default class WalletAccountReadOnlyTonGasless extends AbstractWalletAccou
 
   /**
    * Creates and returns an internal message to execute the given token transfer.
-   * 
+   *
    * @protected
    * @param {TransferOptions} options - The transfer's options.
    * @returns {Promise<MessageRelaxed>} The internal message.
@@ -197,7 +197,7 @@ export default class WalletAccountReadOnlyTonGasless extends AbstractWalletAccou
 
   /**
    * Creates and returns the ton api's raw parameters to execute the given message.
-   * 
+   *
    * @protected
    * @param {MessageRelaxed} message - The message.
    * @param {Pick<TonGaslessWalletConfig, 'paymasterToken'>} config - The configuration object.
