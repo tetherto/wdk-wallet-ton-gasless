@@ -65,9 +65,7 @@ export default class WalletAccountReadOnlyTonGasless extends AbstractWalletAccou
   constructor (publicKey, config) {
     const tonReadOnlyAccount = new WalletAccountReadOnlyTon(publicKey, config)
 
-    const address = tonReadOnlyAccount._wallet.address.toString({ bounceable: false })
-
-    super(address)
+    super(tonReadOnlyAccount._address)
 
     /**
      * The read-only ton gasless wallet account configuration.

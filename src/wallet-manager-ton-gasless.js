@@ -42,7 +42,12 @@ export default class WalletManagerTonGasless extends AbstractWalletManager {
      */
     this._config = config
 
-    /** @private */
+    /**
+     * A map between derivation paths and wallet accounts. It contains all the wallet accounts that have been accessed through the {@link getAccount} and {@link getAccountByPath} methods.
+     *
+     * @protected
+     * @type {{ [path: string]: WalletAccountTonGasless }}
+     */
     this._accounts = {}
   }
 

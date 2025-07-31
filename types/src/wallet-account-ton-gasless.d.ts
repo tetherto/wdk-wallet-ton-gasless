@@ -66,6 +66,12 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
      */
     transfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
     /**
+     * Returns a read-only copy of the account.
+     *
+     * @returns {Promise<WalletAccountReadOnlyTonGasless>} The read-only account.
+     */
+    toReadOnlyAccount(): Promise<WalletAccountReadOnlyTonGasless>;
+    /**
      * Disposes the wallet account, erasing the private key from the memory.
      */
     dispose(): void;

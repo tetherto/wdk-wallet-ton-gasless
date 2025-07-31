@@ -13,8 +13,15 @@ export default class WalletManagerTonGasless extends AbstractWalletManager {
      * @type {TonGaslessWalletConfig}
      */
     protected _config: TonGaslessWalletConfig;
-    /** @private */
-    private _accounts;
+    /**
+     * A map between derivation paths and wallet accounts. It contains all the wallet accounts that have been accessed through the {@link getAccount} and {@link getAccountByPath} methods.
+     *
+     * @protected
+     * @type {{ [path: string]: WalletAccountTonGasless }}
+     */
+    protected _accounts: {
+        [path: string]: WalletAccountTonGasless;
+    };
     /**
      * Returns the wallet account at a specific index (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
      *
