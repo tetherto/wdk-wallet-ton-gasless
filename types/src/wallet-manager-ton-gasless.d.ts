@@ -1,4 +1,4 @@
-export default class WalletManagerTonGasless extends AbstractWalletManager {
+export default class WalletManagerTonGasless extends WalletManager {
     /**
      * Creates a new wallet manager for the ton blockchain that implements gasless features.
      *
@@ -55,5 +55,5 @@ export default class WalletManagerTonGasless extends AbstractWalletManager {
 }
 export type FeeRates = import("@wdk/wallet-ton").FeeRates;
 export type TonGaslessWalletConfig = import("./wallet-account-ton-gasless.js").TonGaslessWalletConfig;
-import AbstractWalletManager from '@wdk/wallet';
+import WalletManager from '@wdk/wallet';
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js';

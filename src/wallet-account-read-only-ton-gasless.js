@@ -13,7 +13,7 @@
 // limitations under the License.
 'use strict'
 
-import { AbstractWalletAccountReadOnly } from '@wdk/wallet'
+import { WalletAccountReadOnly } from '@wdk/wallet'
 
 import { WalletAccountReadOnlyTon } from '@wdk/wallet-ton'
 
@@ -55,7 +55,7 @@ import { TonApiClient } from '@ton-api/client'
 
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
 
-export default class WalletAccountReadOnlyTonGasless extends AbstractWalletAccountReadOnly {
+export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOnly {
   /**
    * Creates a new read-only ton gasless wallet account.
    *

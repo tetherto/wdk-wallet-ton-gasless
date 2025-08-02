@@ -14,7 +14,7 @@
 
 'use strict'
 
-import AbstractWalletManager from '@wdk/wallet'
+import WalletManager from '@wdk/wallet'
 
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
@@ -24,7 +24,7 @@ import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
 const TON_API_URL = 'https://tonapi.io/v2'
 
-export default class WalletManagerTonGasless extends AbstractWalletManager {
+export default class WalletManagerTonGasless extends WalletManager {
   /**
    * Creates a new wallet manager for the ton blockchain that implements gasless features.
    *
