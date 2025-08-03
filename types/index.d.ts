@@ -1,4 +1,5 @@
 export { default } from "./src/wallet-manager-ton-gasless.js";
+export { default as WalletAccountReadOnlyTonGasless } from "./src/wallet-account-read-only-ton-gasless.js";
 export { default as WalletAccountTonGasless } from "./src/wallet-account-ton-gasless.js";
 export type FeeRates = import("@wdk/wallet-ton").FeeRates;
 export type KeyPair = import("@wdk/wallet-ton").KeyPair;
@@ -6,6 +7,7 @@ export type TonTransaction = import("@wdk/wallet-ton").TonTransaction;
 export type TransactionResult = import("@wdk/wallet-ton").TransactionResult;
 export type TransferOptions = import("@wdk/wallet-ton").TransferOptions;
 export type TransferResult = import("@wdk/wallet-ton").TransferResult;
-export type TonClientConfig = import("./src/wallet-account-ton-gasless.js").TonClientConfig;
-export type TonApiClientConfig = import("./src/wallet-account-ton-gasless.js").TonApiClientConfig;
-export type TonGaslessWalletConfig = import("./src/wallet-account-ton-gasless.js").TonGaslessWalletConfig;
+export type TonTransactionReceipt = import("@wdk/wallet-ton").TonTransactionReceipt;
+export type TonClientConfig = import("./src/wallet-account-read-only-ton-gasless.js").TonClientConfig;
+export type TonApiClientConfig = import("./src/wallet-account-read-only-ton-gasless.js").TonApiClientConfig;
+export type TonGaslessWalletConfig = import("./src/wallet-account-read-only-ton-gasless.js").TonGaslessWalletConfig;
