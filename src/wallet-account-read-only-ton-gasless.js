@@ -172,6 +172,8 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
 
     const jettonWalletAddress = await this._tonReadOnlyAccount._getJettonWalletAddress(token)
 
+    const messageBody = this._tonReadOnlyAccount._generateUniqueMessageBody()
+
     const body = beginCell()
       .storeUint(0xf8a7ea5, 32)
       .storeUint(0, 64)
@@ -180,7 +182,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
       .storeAddress(relayAddress)
       .storeBit(false)
       .storeCoins(1n)
-      .storeMaybeRef()
+      .storeMaybeRef(messageBody)
       .endCell()
 
     const message = internal({
