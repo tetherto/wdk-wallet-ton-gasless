@@ -175,7 +175,7 @@ const paymasterBalance = await readOnlyAccount.getPaymasterTokenBalance()
 console.log('Paymaster token balance:', paymasterBalance)
 
 // Check any other token balance
-const tokenBalance = await readOnlyAccount.getTokenBalance('EQC...')
+const tokenBalance = await readOnlyAccount.getTokenBalance('EQ...')
 console.log('Token balance:', tokenBalance)
 ```
 
@@ -299,7 +299,7 @@ const wallet = new WalletManagerTonGasless(seedPhrase, {
     secretKey: 'your-ton-api-key'
   },
   paymasterToken: {
-    address: 'EQC...' // Paymaster token address
+    address: 'EQ...' // Paymaster token address
   },
   transferMaxFee: 1000000000 // Maximum fee in nanotons
 })
@@ -444,8 +444,8 @@ Transfers tokens using gasless transactions.
 
 **Parameters:**
 - `options` (object): Transfer options
-  - `token` (string): Token contract address (e.g., 'EQC...')
-  - `recipient` (string): Recipient TON address (e.g., 'EQC...')
+  - `token` (string): Token contract address (e.g., 'EQ...')
+  - `recipient` (string): Recipient TON address (e.g., 'EQ...')
   - `amount` (number): Amount in token's base units
 - `config` (object, optional): Override configuration
   - `paymasterToken` (object, optional): Override default paymaster token
