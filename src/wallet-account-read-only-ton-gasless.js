@@ -50,7 +50,7 @@ import { TonApiClient } from '@ton-api/client'
  * @property {TonApiClientConfig | TonApiClient} tonApiClient - The ton api client configuration, or an instance of the {@link TonApiClient} class.
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
- * @property {number} [transferMaxFee] - The maximum fee amount for transfer operations.
+ * @property {number | bigint} [transferMaxFee] - The maximum fee amount for transfer operations.
  */
 
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
@@ -96,7 +96,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   /**
    * Returns the account's ton balance.
    *
-   * @returns {Promise<number>} The ton balance (in nanotons).
+   * @returns {Promise<bigint>} The ton balance (in nanotons).
    */
   async getBalance () {
     return await this._tonReadOnlyAccount.getBalance()
@@ -106,7 +106,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * Returns the account balance for a specific token.
    *
    * @param {string} tokenAddress - The smart contract address of the token.
-   * @returns {Promise<number>} The token balance (in base unit).
+   * @returns {Promise<bigint>} The token balance (in base unit).
    */
   async getTokenBalance (tokenAddress) {
     return await this._tonReadOnlyAccount.getTokenBalance(tokenAddress)
@@ -115,7 +115,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   /**
    * Returns the account's balance for the paymaster token provided in the wallet account configuration.
    *
-   * @returns {Promise<number>} The paymaster token balance (in base unit).
+   * @returns {Promise<bigint>} The paymaster token balance (in base unit).
    */
   async getPaymasterTokenBalance () {
     const { paymasterToken } = this._config
@@ -145,7 +145,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
 
     const { commission } = await this._getGaslessTokenTransferRawParams(message, config ?? this._config)
 
-    return { fee: Number(commission) }
+    return { fee: commission }
   }
 
   /**
