@@ -25,22 +25,22 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     /**
      * Returns the account's ton balance.
      *
-     * @returns {Promise<number>} The ton balance (in nanotons).
+     * @returns {Promise<bigint>} The ton balance (in nanotons).
      */
-    getBalance(): Promise<number>;
+    getBalance(): Promise<bigint>;
     /**
      * Returns the account balance for a specific token.
      *
      * @param {string} tokenAddress - The smart contract address of the token.
-     * @returns {Promise<number>} The token balance (in base unit).
+     * @returns {Promise<bigint>} The token balance (in base unit).
      */
-    getTokenBalance(tokenAddress: string): Promise<number>;
+    getTokenBalance(tokenAddress: string): Promise<bigint>;
     /**
      * Returns the account's balance for the paymaster token provided in the wallet account configuration.
      *
-     * @returns {Promise<number>} The paymaster token balance (in base unit).
+     * @returns {Promise<bigint>} The paymaster token balance (in base unit).
      */
-    getPaymasterTokenBalance(): Promise<number>;
+    getPaymasterTokenBalance(): Promise<bigint>;
     /**
      * Quotes the costs of a send transaction operation.
      *
@@ -126,7 +126,7 @@ export type TonGaslessWalletConfig = {
     /**
      * - The maximum fee amount for transfer operations.
      */
-    transferMaxFee?: number;
+    transferMaxFee?: number | bigint;
 };
 import { WalletAccountReadOnly } from '@wdk/wallet';
 import { TonApiClient } from '@ton-api/client';
