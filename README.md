@@ -297,6 +297,63 @@ const wallet = new WalletManagerTonGasless(seedPhrase, {
 | `getFeeRates()` | Returns current fee rates for transactions | `Promise<{normal: bigint, fast: bigint}>` |
 | `dispose()` | Disposes all wallet accounts, clearing private keys from memory | `void` |
 
+##### `getAccount(index)`
+Returns a gasless TON wallet account at the specified index using BIP-44 derivation path m/44'/607'.
+
+**Parameters:**
+- `index` (number, optional): The index of the account to get (default: 0)
+
+**Returns:** `Promise<WalletAccountTonGasless>` - The gasless TON wallet account
+
+**Example:**
+```javascript
+const account = await wallet.getAccount(0)
+const address = await account.getAddress()
+console.log('Gasless TON account address:', address)
+```
+
+##### `getAccountByPath(path)`
+Returns a gasless TON wallet account at the specified BIP-44 derivation path.
+
+**Parameters:**
+- `path` (string): The derivation path (e.g., "0'/0/0", "1'/0/5")
+
+**Returns:** `Promise<WalletAccountTonGasless>` - The gasless TON wallet account
+
+**Example:**
+```javascript
+const account = await wallet.getAccountByPath("0'/0/1")
+const address = await account.getAddress()
+console.log('Custom path gasless address:', address)
+```
+
+##### `getFeeRates()`
+Returns current fee rates for TON transactions (used by paymaster for gasless operations).
+
+**Returns:** `Promise<{normal: bigint, fast: bigint}>` - Object containing fee rates in nanotons
+- `normal`: Standard fee rate for normal confirmation speed
+- `fast`: Higher fee rate for faster confirmation
+
+**Example:**
+```javascript
+const feeRates = await wallet.getFeeRates()
+console.log('Normal fee rate:', feeRates.normal, 'nanotons')
+console.log('Fast fee rate:', feeRates.fast, 'nanotons')
+
+// Note: These fees are typically covered by the paymaster in gasless transactions
+```
+
+##### `dispose()`
+Disposes all gasless TON wallet accounts and clears sensitive data from memory.
+
+**Returns:** `void`
+
+**Example:**
+```javascript
+wallet.dispose()
+// All gasless accounts and private keys are now securely wiped from memory
+```
+
 ### WalletAccountTonGasless
 
 Represents an individual wallet account with gasless features. Implements `IWalletAccount` from `@wdk/wallet`.
@@ -335,8 +392,48 @@ new WalletAccountTonGasless(seed, path, config)
 | `getPaymasterTokenBalance()` | Returns the balance of the paymaster token | `Promise<bigint>` |
 | `dispose()` | Disposes the wallet account, clearing private keys from memory | `void` |
 
+##### `getAddress()`
+Returns the account's TON address.
+
+**Returns:** `Promise<string>` - The TON address
+
+**Example:**
+```javascript
+const address = await account.getAddress()
+console.log('Gasless TON address:', address) // EQBvW8Z5...
+```
+
+##### `sign(message)`
+Signs a message using the account's private key.
+
+**Parameters:**
+- `message` (string): Message to sign
+
+**Returns:** `Promise<string>` - Signature as hex string
+
+**Example:**
+```javascript
+const signature = await account.sign('Hello TON Gasless!')
+console.log('Signature:', signature)
+```
+
+##### `verify(message, signature)`
+Verifies a message signature using the account's public key.
+
+**Parameters:**
+- `message` (string): Original message
+- `signature` (string): Signature as hex string
+
+**Returns:** `Promise<boolean>` - True if signature is valid
+
+**Example:**
+```javascript
+const isValid = await account.verify('Hello TON Gasless!', signature)
+console.log('Signature valid:', isValid)
+```
+
 ##### `transfer(options, config?)`
-Transfers tokens using gasless transactions.
+Transfers tokens using gasless transactions where the paymaster covers transaction fees.
 
 **Parameters:**
 - `options` (object): Transfer options
@@ -348,7 +445,92 @@ Transfers tokens using gasless transactions.
     - `address` (string): Paymaster token address
   - `transferMaxFee` (number | bigint, optional): Override maximum fee
 
-**Returns:** `Promise<{hash: string, fee: bigint}>` - Object containing hash and fee (in nanotons)
+**Returns:** `Promise<{hash: string, fee: bigint}>` - Object containing hash and fee (typically 0 or covered by paymaster)
+
+**Example:**
+```javascript
+const result = await account.transfer({
+  token: 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs', // USDT Jetton
+  recipient: 'EQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diqYENkWsIL0XggGG',
+  amount: 1000000n // 1 USDT (6 decimals)
+})
+console.log('Gasless transfer hash:', result.hash)
+console.log('Fee (covered by paymaster):', result.fee, 'nanotons')
+```
+
+##### `quoteTransfer(options, config?)`
+Estimates the fee for a token transfer (typically covered by paymaster in gasless operations).
+
+**Parameters:**
+- `options` (object): Same as transfer parameters
+  - `token` (string): Token contract address
+  - `recipient` (string): Recipient TON address
+  - `amount` (number | bigint): Amount in token's base units
+- `config` (object, optional): Same as transfer configuration
+  - `paymasterToken` (object, optional): Override default paymaster token
+  - `transferMaxFee` (number | bigint, optional): Override maximum fee
+
+**Returns:** `Promise<{fee: bigint}>` - Object containing estimated fee (typically 0 or covered by paymaster)
+
+**Example:**
+```javascript
+const quote = await account.quoteTransfer({
+  token: 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs', // USDT Jetton
+  recipient: 'EQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diqYENkWsIL0XggGG',
+  amount: 1000000n // 1 USDT (6 decimals)
+})
+console.log('Estimated fee (paymaster will cover):', quote.fee, 'nanotons')
+```
+
+##### `getBalance()`
+Returns the account's native TON balance in nanotons.
+
+**Returns:** `Promise<bigint>` - Balance in nanotons
+
+**Example:**
+```javascript
+const balance = await account.getBalance()
+console.log('TON balance:', balance, 'nanotons')
+console.log('Balance in TON:', Number(balance) / 1e9)
+```
+
+##### `getTokenBalance(tokenAddress)`
+Returns the balance of a specific token (Jetton).
+
+**Parameters:**
+- `tokenAddress` (string): The token contract address
+
+**Returns:** `Promise<bigint>` - Token balance in token's smallest unit
+
+**Example:**
+```javascript
+// Get USDT Jetton balance (6 decimals)
+const usdtBalance = await account.getTokenBalance('EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs')
+console.log('USDT balance:', Number(usdtBalance) / 1e6)
+```
+
+##### `getPaymasterTokenBalance()`
+Returns the balance of the paymaster token used for gasless operations.
+
+**Returns:** `Promise<bigint>` - Paymaster token balance in token's smallest unit
+
+**Example:**
+```javascript
+const paymasterBalance = await account.getPaymasterTokenBalance()
+console.log('Paymaster token balance:', paymasterBalance)
+// This balance is used to cover transaction fees in gasless operations
+```
+
+##### `dispose()`
+Disposes the wallet account, securely erasing the private key from memory.
+
+**Returns:** `void`
+
+**Example:**
+```javascript
+account.dispose()
+// Private key is now securely wiped from memory
+```
 
 #### Properties
 
@@ -390,6 +572,71 @@ new WalletAccountReadOnlyTonGasless(publicKey, config)
 | `getTokenBalance(tokenAddress)` | Returns the balance of a specific token | `Promise<bigint>` |
 | `getPaymasterTokenBalance()` | Returns the balance of the paymaster token | `Promise<bigint>` |
 | `quoteTransfer(options, config?)` | Estimates the fee for a token transfer | `Promise<{fee: bigint}>` |
+
+##### `getBalance()`
+Returns the account's native TON balance in nanotons.
+
+**Returns:** `Promise<bigint>` - Balance in nanotons
+
+**Example:**
+```javascript
+const balance = await readOnlyAccount.getBalance()
+console.log('TON balance:', balance, 'nanotons')
+console.log('Balance in TON:', Number(balance) / 1e9)
+```
+
+##### `getTokenBalance(tokenAddress)`
+Returns the balance of a specific token (Jetton).
+
+**Parameters:**
+- `tokenAddress` (string): The token contract address
+
+**Returns:** `Promise<bigint>` - Token balance in token's smallest unit
+
+**Example:**
+```javascript
+// Get USDT Jetton balance (6 decimals)
+const usdtBalance = await readOnlyAccount.getTokenBalance('EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs')
+console.log('USDT balance:', Number(usdtBalance) / 1e6)
+```
+
+##### `getPaymasterTokenBalance()`
+Returns the balance of the paymaster token used for gasless operations.
+
+**Returns:** `Promise<bigint>` - Paymaster token balance in token's smallest unit
+
+**Example:**
+```javascript
+const paymasterBalance = await readOnlyAccount.getPaymasterTokenBalance()
+console.log('Paymaster token balance:', paymasterBalance)
+// This balance indicates how much the account can use for gasless transactions
+```
+
+##### `quoteTransfer(options, config?)`
+Estimates the fee for a token transfer (typically covered by paymaster in gasless operations).
+
+**Parameters:**
+- `options` (object): Transfer options
+  - `token` (string): Token contract address
+  - `recipient` (string): Recipient TON address
+  - `amount` (number | bigint): Amount in token's base units
+- `config` (object, optional): Override configuration
+  - `paymasterToken` (object, optional): Override default paymaster token
+    - `address` (string): Paymaster token address
+  - `transferMaxFee` (number | bigint, optional): Override maximum fee
+
+**Returns:** `Promise<{fee: bigint}>` - Object containing estimated fee (typically 0 or covered by paymaster)
+
+**Example:**
+```javascript
+const quote = await readOnlyAccount.quoteTransfer({
+  token: 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs', // USDT Jetton
+  recipient: 'EQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diqYENkWsIL0XggGG',
+  amount: 1000000n // 1 USDT (6 decimals)
+})
+console.log('Estimated fee (paymaster will cover):', quote.fee, 'nanotons')
+console.log('Estimated fee in TON:', Number(quote.fee) / 1e9)
+```
 
 ## 🌐 Supported Networks
 
