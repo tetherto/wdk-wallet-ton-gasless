@@ -1,0 +1,47 @@
+{
+  "name": "@wdk/wallet-ton-gasless",
+  "version": "1.0.0-beta.1",
+  "description": "A simple package to manage BIP-32 wallets for the TON blockchain, which implement the gasless functionality",
+  "keywords": ["wdk", "wallet", "bip-32", "ton", "gasless"],
+  "author": "Tether",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/tetherto/wdk-wallet-ton-gasless.git"
+  },
+  "main": "index.js",
+  "type": "module",
+  "types": "./types",
+  "scripts": {
+    "build:types": "tsc",
+    "lint": "standard",
+    "lint:fix": "standard --fix"
+  },
+  "dependencies": {
+    "@ton-api/client": "0.4.0",
+    "@ton/ton": "15.3.0",
+    "@wdk/wallet": "https://github.com/davi0kprogramsthings/wdk-wallet#develop",
+    "@wdk/wallet-ton": "https://github.com/davi0kprogramsthings/wdk-wallet-ton#develop",
+    "bare-wdk-runtime": "2.0.0"
+  },
+  "devDependencies": {
+    "standard": "17.1.2",
+    "typescript": "5.8.3"
+  },
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "bare": "./bare.js",
+      "default": "./index.js"
+    },
+    "./package": {
+      "default": "./package.json"
+    }
+  },
+  "standard": {
+    "ignore": [
+      "bare.js",
+      "tests/**/*.js"
+    ]
+  }
+}
