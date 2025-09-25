@@ -22,7 +22,7 @@
     "@ton/ton": "15.3.0",
     "@wdk/wallet": "https://github.com/davi0kprogramsthings/wdk-wallet#develop",
     "@wdk/wallet-ton": "https://github.com/davi0kprogramsthings/wdk-wallet-ton#develop",
-    "bare-wdk-runtime": "2.0.0"
+    "bare-node-runtime": "1.0.3"
   },
   "devDependencies": {
     "standard": "17.1.2",
