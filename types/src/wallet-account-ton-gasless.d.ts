@@ -78,11 +78,11 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     /** @private */
     private _sendGaslessTokenTransfer;
 }
-export type IWalletAccount = import("@wdk/wallet").IWalletAccount;
-export type KeyPair = import("@wdk/wallet-ton").KeyPair;
-export type TonTransaction = import("@wdk/wallet-ton").TonTransaction;
-export type TransactionResult = import("@wdk/wallet-ton").TransactionResult;
-export type TransferOptions = import("@wdk/wallet-ton").TransferOptions;
-export type TransferResult = import("@wdk/wallet-ton").TransferResult;
+export type IWalletAccount = import("@tetherto/wdk-wallet").IWalletAccount;
+export type KeyPair = import("@tetherto/wdk-wallet-ton").KeyPair;
+export type TonTransaction = import("@tetherto/wdk-wallet-ton").TonTransaction;
+export type TransactionResult = import("@tetherto/wdk-wallet-ton").TransactionResult;
+export type TransferOptions = import("@tetherto/wdk-wallet-ton").TransferOptions;
+export type TransferResult = import("@tetherto/wdk-wallet-ton").TransferResult;
 export type TonGaslessWalletConfig = import("./wallet-account-read-only-ton-gasless.js").TonGaslessWalletConfig;
 import WalletAccountReadOnlyTonGasless from './wallet-account-read-only-ton-gasless.js';

@@ -13,24 +13,25 @@
 // limitations under the License.
 'use strict'
 
-import { WalletAccountReadOnly } from '@wdk/wallet'
+import { WalletAccountReadOnly } from '@tetherto/wdk-wallet'
 
-import { WalletAccountReadOnlyTon } from '@wdk/wallet-ton'
+import { WalletAccountReadOnlyTon } from '@tetherto/wdk-wallet-ton'
 
-import { Address, beginCell, internal, toNano, TonClient, storeMessage } from '@ton/ton'
+import { Address, beginCell, internal, toNano, storeMessage } from '@ton/ton'
 
 import { TonApiClient } from '@ton-api/client'
 
 /** @typedef {import('@ton/ton').MessageRelaxed} MessageRelaxed */
+/** @typedef {import('@ton/ton').TonClient} TonClient */
 
 /** @typedef {import('@ton-api/client').SignRawParams} SignRawParams */
 
-/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
-/** @typedef {import('@wdk/wallet-ton').TransactionResult} TransactionResult */
-/** @typedef {import('@wdk/wallet-ton').TransferOptions} TransferOptions */
-/** @typedef {import('@wdk/wallet-ton').TransferResult} TransferResult */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransaction} TonTransaction */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TransactionResult} TransactionResult */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TransferOptions} TransferOptions */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
 
-/** @typedef {import('@wdk/wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
 
 /**
  * @typedef {Object} TonClientConfig

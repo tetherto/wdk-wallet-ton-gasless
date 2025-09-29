@@ -1,4 +1,4 @@
-# @wdk/wallet-ton-gasless
+# @tetherto/wdk-wallet-ton-gasless
 
 **Note**: This package is currently in beta. Please test thoroughly in development environments before using in production.
 
@@ -21,17 +21,17 @@ For detailed documentation about the complete WDK ecosystem, visit [docs.wallet.
 
 ## ⬇️ Installation
 
-To install the `@wdk/wallet-ton-gasless` package, follow these instructions:
+To install the `@tetherto/wdk-wallet-ton-gasless` package, follow these instructions:
 
 You can install it using npm:
 
 ```bash
-npm install @wdk/wallet-ton-gasless
+npm install @tetherto/wdk-wallet-ton-gasless
 ```
 
 ## 🚀 Quick Start
 
-### Importing from `@wdk/wallet-ton-gasless`
+### Importing from `@tetherto/wdk-wallet-ton-gasless`
 
 ### Creating a New Wallet
 
@@ -39,7 +39,7 @@ npm install @wdk/wallet-ton-gasless
 import WalletManagerTonGasless, { 
   WalletAccountTonGasless, 
   WalletAccountReadOnlyTonGasless 
-} from '@wdk/wallet-ton-gasless'
+} from '@tetherto/wdk-wallet-ton-gasless'
 
 // Use a BIP-39 seed phrase (replace with your own secure phrase)
 const seedPhrase = 'test only example nut use this real life secret phrase must random'
@@ -70,7 +70,7 @@ const readOnlyAccount = await account.toReadOnlyAccount()
 ### Managing Multiple Accounts
 
 ```javascript
-import WalletManagerTonGasless from '@wdk/wallet-ton-gasless'
+import WalletManagerTonGasless from '@tetherto/wdk-wallet-ton-gasless'
 
 // Assume wallet is already created
 // Get the first account (index 0)
@@ -100,7 +100,7 @@ console.log('Custom account address:', customAddress)
 For accounts where you have the seed phrase and full access:
 
 ```javascript
-import WalletManagerTonGasless from '@wdk/wallet-ton-gasless'
+import WalletManagerTonGasless from '@tetherto/wdk-wallet-ton-gasless'
 
 // Assume wallet and account are already created
 // Get native TON balance (in nanotons)
@@ -125,7 +125,7 @@ console.log('Paymaster token balance:', paymasterBalance);
 For addresses where you don't have the seed phrase:
 
 ```javascript
-import { WalletAccountReadOnlyTonGasless } from '@wdk/wallet-ton-gasless'
+import { WalletAccountReadOnlyTonGasless } from '@tetherto/wdk-wallet-ton-gasless'
 
 // Create a read-only account with public key
 const publicKey = '...'; // Replace with the actual public key
@@ -241,14 +241,14 @@ wallet.dispose()
 
 | Class | Description | Methods |
 |-------|-------------|---------|
-| [WalletManagerTonGasless](#walletmanagertongasless) | Main class for managing TON wallets with gasless features. Extends `WalletManager` from `@wdk/wallet`. | [Constructor](#constructor), [Methods](#methods) |
-| [WalletAccountTonGasless](#walletaccounttongasless) | Individual TON wallet account with gasless features. Extends `WalletAccountReadOnlyTonGasless` and implements `IWalletAccount` from `@wdk/wallet`. | [Constructor](#constructor-1), [Methods](#methods-1), [Properties](#properties) |
-| [WalletAccountReadOnlyTonGasless](#walletaccountreadonlytongasless) | Read-only TON wallet account with gasless features. Extends `WalletAccountReadOnly` from `@wdk/wallet`. | [Constructor](#constructor-2), [Methods](#methods-2) |
+| [WalletManagerTonGasless](#walletmanagertongasless) | Main class for managing TON wallets with gasless features. Extends `WalletManager` from `@tetherto/wdk-wallet`. | [Constructor](#constructor), [Methods](#methods) |
+| [WalletAccountTonGasless](#walletaccounttongasless) | Individual TON wallet account with gasless features. Extends `WalletAccountReadOnlyTonGasless` and implements `IWalletAccount` from `@tetherto/wdk-wallet`. | [Constructor](#constructor-1), [Methods](#methods-1), [Properties](#properties) |
+| [WalletAccountReadOnlyTonGasless](#walletaccountreadonlytongasless) | Read-only TON wallet account with gasless features. Extends `WalletAccountReadOnly` from `@tetherto/wdk-wallet`. | [Constructor](#constructor-2), [Methods](#methods-2) |
 
 ### WalletManagerTonGasless
 
 The main class for managing TON wallets with gasless features.  
-Extends `WalletManager` from `@wdk/wallet`.
+Extends `WalletManager` from `@tetherto/wdk-wallet`.
 
 #### Constructor
 
@@ -355,7 +355,7 @@ wallet.dispose()
 
 ### WalletAccountTonGasless
 
-Represents an individual wallet account with gasless features. Implements `IWalletAccount` from `@wdk/wallet`.
+Represents an individual wallet account with gasless features. Implements `IWalletAccount` from `@tetherto/wdk-wallet`.
 
 #### Constructor
 
