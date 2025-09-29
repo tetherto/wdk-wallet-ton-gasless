@@ -14,11 +14,11 @@
 
 'use strict'
 
-import WalletManager from '@wdk/wallet'
+import WalletManager from '@tetherto/wdk-wallet'
 
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
 
-/** @typedef {import('@wdk/wallet-ton').FeeRates} FeeRates */
+/** @typedef {import('@tetherto/wdk-wallet-ton').FeeRates} FeeRates */
 
 /** @typedef {import('./wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
 

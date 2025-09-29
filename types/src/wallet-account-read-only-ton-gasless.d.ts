@@ -83,11 +83,11 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
 }
 export type MessageRelaxed = import("@ton/ton").MessageRelaxed;
 export type SignRawParams = import("@ton-api/client").SignRawParams;
-export type TonTransaction = import("@wdk/wallet-ton").TonTransaction;
-export type TransactionResult = import("@wdk/wallet-ton").TransactionResult;
-export type TransferOptions = import("@wdk/wallet-ton").TransferOptions;
-export type TransferResult = import("@wdk/wallet-ton").TransferResult;
-export type TonTransactionReceipt = import("@wdk/wallet-ton").TonTransactionReceipt;
+export type TonTransaction = import("@tetherto/wdk-wallet-ton").TonTransaction;
+export type TransactionResult = import("@tetherto/wdk-wallet-ton").TransactionResult;
+export type TransferOptions = import("@tetherto/wdk-wallet-ton").TransferOptions;
+export type TransferResult = import("@tetherto/wdk-wallet-ton").TransferResult;
+export type TonTransactionReceipt = import("@tetherto/wdk-wallet-ton").TonTransactionReceipt;
 export type TonClientConfig = {
     /**
      * - The url of the ton center api.
@@ -128,6 +128,6 @@ export type TonGaslessWalletConfig = {
      */
     transferMaxFee?: number | bigint;
 };
-import { WalletAccountReadOnly } from '@wdk/wallet';
+import { WalletAccountReadOnly } from '@tetherto/wdk-wallet';
 import { TonApiClient } from '@ton-api/client';
 import { TonClient } from '@ton/ton';

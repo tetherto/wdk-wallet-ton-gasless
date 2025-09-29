@@ -1,8 +1,14 @@
 {
-  "name": "@wdk/wallet-ton-gasless",
+  "name": "@tetherto/wdk-wallet-ton-gasless",
   "version": "1.0.0-beta.1",
   "description": "A simple package to manage BIP-32 wallets for the TON blockchain, which implement the gasless functionality",
-  "keywords": ["wdk", "wallet", "bip-32", "ton", "gasless"],
+  "keywords": [
+    "wdk",
+    "wallet",
+    "bip-32",
+    "ton",
+    "gasless"
+  ],
   "author": "Tether",
   "license": "Apache-2.0",
   "repository": {
@@ -18,10 +24,10 @@
     "lint:fix": "standard --fix"
   },
   "dependencies": {
+    "@tetherto/wdk-wallet": "^1.0.0-beta.1",
+    "@tetherto/wdk-wallet-ton": "^1.0.0-beta.2",
     "@ton-api/client": "0.4.0",
     "@ton/ton": "15.3.0",
-    "@wdk/wallet": "https://github.com/davi0kprogramsthings/wdk-wallet#develop",
-    "@wdk/wallet-ton": "https://github.com/davi0kprogramsthings/wdk-wallet-ton#develop",
     "bare-wdk-runtime": "2.0.0"
   },
   "devDependencies": {
@@ -37,6 +43,10 @@
     "./package": {
       "default": "./package.json"
     }
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://registry.npmjs.org/"
   },
   "standard": {
     "ignore": [

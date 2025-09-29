@@ -13,14 +13,14 @@
 // limitations under the License.
 'use strict'
 
-/** @typedef {import('@wdk/wallet-ton').FeeRates} FeeRates */
+/** @typedef {import('@tetherto/wdk-wallet-ton').FeeRates} FeeRates */
 
-/** @typedef {import('@wdk/wallet-ton').KeyPair} KeyPair */
-/** @typedef {import('@wdk/wallet-ton').TonTransaction} TonTransaction */
-/** @typedef {import('@wdk/wallet-ton').TransactionResult} TransactionResult */
-/** @typedef {import('@wdk/wallet-ton').TransferOptions} TransferOptions */
-/** @typedef {import('@wdk/wallet-ton').TransferResult} TransferResult */
-/** @typedef {import('@wdk/wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet-ton').KeyPair} KeyPair */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransaction} TonTransaction */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TransactionResult} TransactionResult */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TransferOptions} TransferOptions */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
 
 /** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonClientConfig} TonClientConfig */
 /** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */
