@@ -27,7 +27,7 @@
     "@tetherto/wdk-wallet": "^1.0.0-beta.1",
     "@tetherto/wdk-wallet-ton": "^1.0.0-beta.2",
     "@ton-api/client": "0.4.0",
-    "@ton/ton": "15.3.0",
+    "@ton/ton": "15.1.0",
     "bare-node-runtime": "1.0.3"
   },
   "devDependencies": {
