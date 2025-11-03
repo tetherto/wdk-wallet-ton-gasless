@@ -135,7 +135,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     await this._sendGaslessTokenTransfer(rawParams)
 
     return {
-      hash: this._tonAccount._getMessageHash(message),
+      hash: transfer.hash().toString('hex'),
       fee
     }
   }
