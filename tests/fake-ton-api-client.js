@@ -24,7 +24,7 @@ export default class FakeTonApiClient extends TonApiClient {
           from: params.walletAddress,
           valid_until: Math.floor(Date.now() / 1000) + 600,
           messages: params.messages.map(msg => ({
-            address: this.relayAddress.toString(),  // Convert to string to avoid module mismatch
+            address: this.relayAddress.toString(),
             amount: '1000000',
             payload: msg.boc
           }))

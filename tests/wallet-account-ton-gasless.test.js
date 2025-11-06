@@ -6,15 +6,8 @@ import { JettonMinter } from '@ton-community/assets-sdk'
 import * as bip39 from 'bip39'
 
 import BlockchainWithLogs from './blockchain-with-logs.js'
-import FakeTonClient, { ACTIVE_ACCOUNT_FEE } from './fake-ton-client.js'
+import FakeTonClient from './fake-ton-client.js'
 import FakeTonApiClient from './fake-ton-api-client.js'
-
-function calculateQueryId(highRandom, lowRandom) {
-  const high = BigInt(Math.floor(highRandom * 0x100000000))
-  const low = BigInt(Math.floor(lowRandom * 0x100000000))
-  const queryId = (high << 32n) | low
-  return queryId
-}
 
 const originalMathRandom = Math.random
 function restoreMathRandom() {
@@ -26,7 +19,7 @@ function restoreDateNow() {
   global.Date.now = originalDateNow
 }
 
-const { WalletAccountTonGasless } = await import('../index.js')
+const { WalletAccountReadOnlyTonGasless, WalletAccountTonGasless } = await import('../index.js')
 
 const SEED_PHRASE = 'cook voyage document eight skate token alien guide drink uncle term abuse'
 const INVALID_SEED_PHRASE = 'invalid seed phrase'
@@ -226,15 +219,23 @@ describe('WalletAccountTonGasless', () => {
       jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0)
 
+      const gaslessConfigSpy = jest.spyOn(tonApiClient.gasless, 'gaslessConfig')
+      const gaslessEstimateSpy = jest.spyOn(tonApiClient.gasless, 'gaslessEstimate')
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
       const { hash, fee } = await account.transfer(TRANSFER)
 
       expect(hash).toBeDefined()
       expect(hash).toBe('4ee6eb54f84f264a2322bf164f6d8800cfe2a7c9a5235c82d453d6d056a47287')
 
       expect(fee).toBe(5_000_000n)
+
+      expect(gaslessConfigSpy).toHaveBeenCalledTimes(1)
+      expect(gaslessEstimateSpy).toHaveBeenCalledTimes(1)
+      expect(gaslessSendSpy).toHaveBeenCalledTimes(1)
     })
 
-    test('should generate different hashes for identical token transfers (queryId ensures uniqueness)', async () => {
+    test('should generate different hashes for identical token transfers', async () => {
       const TRANSFER = {
         token: testToken.address.toString(),
         recipient: RECIPIENT.address,
@@ -245,10 +246,13 @@ describe('WalletAccountTonGasless', () => {
         .mockReturnValueOnce(0.1).mockReturnValueOnce(0.2)
         .mockReturnValueOnce(0.3).mockReturnValueOnce(0.4)
         .mockReturnValueOnce(0.5).mockReturnValueOnce(0.6)
+
       global.Date.now = jest.fn(() => 3_000_000_000_000)
       const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
       jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0).mockResolvedValue(1).mockResolvedValue(2)
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
       const result1 = await account.transfer(TRANSFER)
       const result2 = await account.transfer(TRANSFER)
       const result3 = await account.transfer(TRANSFER)
@@ -256,6 +260,111 @@ describe('WalletAccountTonGasless', () => {
       expect(result1.hash).toBe('0e0ea3ccffcefebd056cc44bf626e21329817add0a0dc10cf9aa687aed1c1aa2')
       expect(result2.hash).toBe('77689f241dc0e6f3a318907904973730a610ce30ba293135c9af505c7b9bb7b5')
       expect(result3.hash).toBe('5f5a1865c7709fbdd83eeb8a4f68cd1a5f9568b3dd12a71b36ced9f3532ac791')
+      expect(gaslessSendSpy).toHaveBeenCalledTimes(3)
+    })
+
+    test('should throw error when transfer fee exceeds max fee', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: RECIPIENT.address,
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+
+      await expect(
+        account.transfer(TRANSFER, {
+          paymasterToken: { address: paymasterToken.address.toString() },
+          transferMaxFee: 1_000_000n
+        })
+      ).rejects.toThrow('The transfer operation exceeds the transfer max fee.')
+    })
+
+    test('should throw error for invalid recipient address', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: 'invalid-address',
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+
+      await expect(account.transfer(TRANSFER)).rejects.toThrow('Unknown address type: invalid-address')
+    })
+
+    test('should throw error when gaslessConfig API fails', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: RECIPIENT.address,
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+      jest.spyOn(tonApiClient.gasless, 'gaslessConfig').mockRejectedValue(new Error('Network error: Failed to get gasless config'))
+
+      await expect(account.transfer(TRANSFER)).rejects.toThrow('Network error: Failed to get gasless config')
+    })
+
+    test('should throw error when gaslessEstimate API fails', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: RECIPIENT.address,
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+      jest.spyOn(tonApiClient.gasless, 'gaslessEstimate').mockRejectedValue(new Error('API error: Failed to estimate gas'))
+
+      await expect(account.transfer(TRANSFER)).rejects.toThrow('API error: Failed to estimate gas')
+    })
+
+    test('should throw error when gaslessSend API fails', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: RECIPIENT.address,
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+      account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0)
+      jest.spyOn(tonApiClient.gasless, 'gaslessSend').mockRejectedValue(new Error('Transaction failed: Insufficient funds'))
+
+      await expect(account.transfer(TRANSFER)).rejects.toThrow('Transaction failed: Insufficient funds')
+    })
+  })
+
+  describe('toReadOnlyAccount', () => {
+    test('should return a read-only account instance', async () => {
+      const readOnlyAccount = await account.toReadOnlyAccount()
+      expect(readOnlyAccount).toBeInstanceOf(WalletAccountReadOnlyTonGasless)
+
+      expect(await readOnlyAccount.getAddress()).toBe(ACCOUNT.address)
+      expect(readOnlyAccount).toBeDefined()
+      expect(readOnlyAccount.constructor.name).toBe('WalletAccountReadOnlyTonGasless')
+    })
+  })
+  
+  describe('dispose', () => {
+    test('should call dispose on underlying tonAccount', () => {
+      const testAccount = new WalletAccountTonGasless(SEED_PHRASE, "0'/0/0", {
+        tonClient,
+        tonApiClient,
+        paymasterToken: {
+          address: paymasterToken.address.toString()
+        }
+      })
+
+      const disposeSpy = jest.spyOn(testAccount._tonAccount, 'dispose')
+
+      testAccount.dispose()
+
+      expect(disposeSpy).toHaveBeenCalledTimes(1)
+      expect(testAccount.keyPair.privateKey).toBeUndefined()
     })
   })
 })
