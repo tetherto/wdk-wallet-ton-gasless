@@ -132,10 +132,10 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
       throw new Error('The transfer operation exceeds the transfer max fee.')
     }
 
-    await this._sendGaslessTokenTransfer(rawParams)
+    const hash = await this._sendGaslessTokenTransfer(rawParams)
 
     return {
-      hash: this._tonAccount._getMessageHash(message),
+      hash,
       fee
     }
   }
@@ -195,5 +195,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
       walletPublicKey: Buffer.from(this.keyPair.publicKey).toString('hex'),
       boc
     })
+
+    return transfer.hash().toString('hex')
   }
 }
