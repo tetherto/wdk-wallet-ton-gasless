@@ -571,6 +571,7 @@ new WalletAccountReadOnlyTonGasless(publicKey, config)
 | `getTokenBalance(tokenAddress)` | Returns the balance of a specific token | `Promise<bigint>` |
 | `getPaymasterTokenBalance()` | Returns the balance of the paymaster token | `Promise<bigint>` |
 | `quoteTransfer(options, config?)` | Estimates the fee for a token transfer | `Promise<{fee: bigint}>` |
+| `verify(message, signature)` | Verifies a message signature | `Promise<boolean>` |
 
 ##### `getBalance()`
 Returns the account's native TON balance in nanotons.
@@ -635,6 +636,21 @@ const quote = await readOnlyAccount.quoteTransfer({
 })
 console.log('Estimated fee (paymaster will cover):', quote.fee, 'nanotons')
 console.log('Estimated fee in TON:', Number(quote.fee) / 1e9)
+```
+
+##### `verify(message, signature)`
+Verifies a message signature using the account's public key.
+
+**Parameters:**
+- `message` (string): Original message
+- `signature` (string): Signature as hex string
+
+**Returns:** `Promise<boolean>` - True if signature is valid
+
+**Example:**
+```javascript
+const isValid = await readOnlyAccount.verify('Hello TON Gasless!', signature)
+console.log('Signature valid:', isValid)
 ```
 
 ## 🌐 Supported Networks
