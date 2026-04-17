@@ -175,6 +175,17 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   }
 
   /**
+   * Verifies a message's signature.
+   *
+   * @param {string} message - The original message.
+   * @param {string} signature - The signature to verify.
+   * @returns {Promise<boolean>} True if the signature is valid.
+   */
+  async verify (message, signature) {
+    return await this._tonReadOnlyAccount.verify(message, signature)
+  }
+
+  /**
    * Returns a transaction's receipt.
    *
    * @param {string} hash - The transaction's hash.
