@@ -49,8 +49,9 @@ import { TonApiClient } from '@ton-api/client'
 
 /**
  * @typedef {Object} TonGaslessWalletConfig
- * @property {TonClientConfig | TonClient | Array<TonClientConfig | TonClient>} tonClient - The ton client configuration, or an instance of the {@link TonClient} class.
- * @property {TonApiClientConfig | TonApiClient} tonApiClient - The ton api client configuration, or an instance of the {@link TonApiClient} class.
+ * @property {TonClientConfig | TonClient | Array<TonClientConfig | TonClient>} tonClient - The ton configuration or ton client {@link TonClient}. It's also possible to provide an array of configs or clientss instead. In such case, connection errors will cause the wallet to automatically fallback on the next client in the list.
+ * @property {TonApiClientConfig | TonApiClient | Array<TonApiClientConfig | TonApiClient>} tonApiClient - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list.
+ * @property {number} [retries] - If set and if 'tonClient' and 'tonApiClient' are lists of configs or clients, the number of additional retry attempts after the initial call fails. Total attempts = `1 + retries`. For example, `retries: 3` with 4 clients will try each client once before throwing. If `retries` exceeds the number of clients, the failover will loop back and retry already-failed clients in round-robin order. Default: 3.
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
  * @property {number | bigint} [transferMaxFee] - The maximum fee amount for transfer operations.
@@ -59,6 +60,14 @@ import { TonApiClient } from '@ton-api/client'
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
 
 export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOnly {
+  /**
+   * The ton api client.
+   *
+   * @protected
+   * @type {TonApiClient}
+   */
+  _tonApiClient
+
   /**
    * Creates a new read-only ton gasless wallet account.
    *
@@ -78,28 +87,24 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      */
     this._config = config
 
-    /**
-     * The ton client.
-     *
-     * @protected
-     * @type {TonApiClient | undefined}
-     */
-    this._tonApiClient = undefined
-
     const { tonApiClient, retries = 3 } = config
 
     if (Array.isArray(tonApiClient)) {
-      if (tonApiClient.length > 0) {
-        const failoverProvider = new FailoverProvider({ retries })
-        for (const entry of tonApiClient) {
-          const option = entry instanceof TonApiClient
-            ? entry
-            : new TonApiClient({ endpoint: entry.url, apiKey: entry.secretKey })
-          failoverProvider.addProvider(option)
-        }
-        this._tonApiClient = failoverProvider.initialize()
+      if (!tonApiClient.length) {
+        throw new Error("The 'provider' option cannot be set to an empty list.")
       }
-    } else if (tonApiClient) {
+
+      const failoverProvider = new FailoverProvider({ retries })
+
+      for (const entry of tonApiClient) {
+        const option = entry instanceof TonApiClient
+          ? entry
+          : new TonApiClient({ endpoint: entry.url, apiKey: entry.secretKey })
+        failoverProvider.addProvider(option)
+      }
+
+      this._tonApiClient = failoverProvider.initialize()
+    } else {
       this._tonApiClient = tonApiClient instanceof TonApiClient
         ? tonApiClient
         : new TonApiClient({ endpoint: tonApiClient.url, apiKey: tonApiClient.secretKey })

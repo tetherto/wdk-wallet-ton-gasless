@@ -17,9 +17,9 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * The ton api client.
      *
      * @protected
-     * @type {TonApiClient | undefined}
+     * @type {TonApiClient}
      */
-    protected _tonApiClient: TonApiClient | undefined;
+    protected _tonApiClient: TonApiClient;
     /** @private */
     private _tonReadOnlyAccount;
     /**
@@ -110,13 +110,17 @@ export type TonApiClientConfig = {
 };
 export type TonGaslessWalletConfig = {
     /**
-     * - The ton client configuration, or an instance of the {@link TonClient} class.
+     * - The ton configuration or ton client {@link TonClient}. It's also possible to provide an array of configs or clientss instead. In such case, connection errors will cause the wallet to automatically fallback on the next client in the list.
      */
-    tonClient: TonClientConfig | TonClient;
+    tonClient: TonClientConfig | TonClient | Array<TonClientConfig | TonClient>;
     /**
-     * - The ton api client configuration, or an instance of the {@link TonApiClient} class.
+     * - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list.
      */
-    tonApiClient: TonApiClientConfig | TonApiClient;
+    tonApiClient: TonApiClientConfig | TonApiClient | Array<TonApiClientConfig | TonApiClient>;
+    /**
+     * - If set and if 'tonClient' and 'tonApiClient' are lists of configs or clients, the number of additional retry attempts after the initial call fails. Total attempts = `1 + retries`. For example, `retries: 3` with 4 clients will try each client once before throwing. If `retries` exceeds the number of clients, the failover will loop back and retry already-failed clients in round-robin order. Default: 3.
+     */
+    retries?: number;
     /**
      * - The paymaster token configuration.
      */
