@@ -107,7 +107,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     } else {
       this._tonApiClient = tonApiClient instanceof TonApiClient
         ? tonApiClient
-        : new TonApiClient({ endpoint: tonApiClient.url, apiKey: tonApiClient.secretKey })
+        : new TonApiClient({ baseUrl: tonApiClient.url, apiKey: tonApiClient.secretKey })
     }
 
     /** @private */
