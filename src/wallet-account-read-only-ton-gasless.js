@@ -99,7 +99,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
       for (const entry of tonApiClient) {
         const option = entry instanceof TonApiClient
           ? entry
-          : new TonApiClient({ endpoint: entry.url, apiKey: entry.secretKey })
+          : new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
         failoverProvider.addProvider(option)
       }
 
