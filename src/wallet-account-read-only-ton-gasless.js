@@ -91,7 +91,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
 
     if (Array.isArray(tonApiClient)) {
       if (!tonApiClient.length) {
-        throw new Error("The 'provider' option cannot be set to an empty list.")
+        throw new Error("The 'tonApiClient' option cannot be set to an empty list.")
       }
 
       const failoverProvider = new FailoverProvider({ retries })
