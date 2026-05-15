@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globa
 
 import * as bip39 from 'bip39'
 
+import WalletManagerTon from '@tetherto/wdk-wallet-ton'
 import WalletManagerTonGasless, { WalletAccountTonGasless } from '../index.js'
 
 const SEED_PHRASE = 'cook voyage document eight skate token alien guide drink uncle term abuse'
@@ -85,6 +86,21 @@ describe('WalletManagerTonGasless', () => {
     test('should throw if the index is a negative number', async () => {
       await expect(wallet.getAccount(-1))
         .rejects.toThrow('Invalid child index: -1')
+    })
+  })
+
+  describe('address parity with wdk-wallet-ton', () => {
+    test('derives the same address as wdk-wallet-ton for the same seed and index', async () => {
+      const tonWallet = new WalletManagerTon(SEED_PHRASE)
+
+      for (const index of [0, 1, 2]) {
+        const expected = await (await tonWallet.getAccount(index)).getAddress()
+        const actual = await (await wallet.getAccount(index)).getAddress()
+
+        expect(actual).toBe(expected)
+      }
+
+      tonWallet.dispose()
     })
   })
 
