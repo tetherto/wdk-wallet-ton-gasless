@@ -77,6 +77,10 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
   /**
    * The account's key pair.
    *
+   * The uint8 arrays are bound to the wallet account, so any external change will reflect to the internal representation. For this reason,
+   * it's strongly recommended to treat the key pair as a read-only view of the keys. While it's still technically possible to alter their
+   * content, client code should never do so.
+   *
    * @type {KeyPair}
    */
   get keyPair () {
@@ -91,6 +95,16 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    */
   async sign (message) {
     return await this._tonAccount.sign(message)
+  }
+
+  /**
+   * Signs a transaction.
+   *
+   * @param {TonTransaction} tx - The transaction.
+   * @returns {Promise<never>} Never resolves; always throws.
+   */
+  async signTransaction (tx) {
+    throw new Error("Method 'signTransaction(tx)' not supported on ton gasless.")
   }
 
   /**
@@ -135,9 +149,11 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * @returns {Promise<WalletAccountReadOnlyTonGasless>} The read-only account.
    */
   async toReadOnlyAccount () {
-    const readOnlyAccount = new WalletAccountReadOnlyTonGasless(this.keyPair.publicKey, this._config)
+    if (!this._tonGaslessReadOnlyAccount) {
+      this._tonGaslessReadOnlyAccount = new WalletAccountReadOnlyTonGasless(this.keyPair.publicKey, this._config)
+    }
 
-    return readOnlyAccount
+    return this._tonGaslessReadOnlyAccount
   }
 
   /**
