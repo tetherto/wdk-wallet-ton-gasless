@@ -196,17 +196,21 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   static _createTonApiClientWithFailover (tonApiClients, retries) {
     const failoverProvider = new FailoverProvider({ retries })
 
+    let tonApiClient = undefined
+
     const clients = tonApiClients.map((entry) => {
-      return entry instanceof TonApiClient
-        ? entry
-        : new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
+      if (entry instanceof TonApiClient) {
+        if(!tonApiClient) tonApiClient = entry
+        return entry
+      }
+      return new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
     })
 
     for (const client of clients) {
       failoverProvider.addProvider(client.http)
     }
 
-    const tonApiClient = new TonApiClient()
+    tonApiClient = tonApiClient || new TonApiClient()
     tonApiClient.http = failoverProvider.initialize()
 
     return tonApiClient
