@@ -93,17 +93,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
       if (!tonApiClient.length) {
         throw new Error("The 'tonApiClient' option cannot be set to an empty list.")
       }
-
-      const failoverProvider = new FailoverProvider({ retries })
-
-      for (const entry of tonApiClient) {
-        const option = entry instanceof TonApiClient
-          ? entry
-          : new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
-        failoverProvider.addProvider(option)
-      }
-
-      this._tonApiClient = failoverProvider.initialize()
+      this._tonApiClient = WalletAccountReadOnlyTonGasless._createTonApiClientWithFailover(tonApiClient, retries)
     } else {
       this._tonApiClient = tonApiClient instanceof TonApiClient
         ? tonApiClient
@@ -193,6 +183,33 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    */
   async getTransactionReceipt (hash) {
     return await this._tonReadOnlyAccount.getTransactionReceipt(hash)
+  }
+
+  /**
+   * Creates a TON API client whose internal API calls fail over across configured clients.
+   *
+   * @protected
+   * @param {Array<TonApiClientConfig | TonApiClient>} tonApiClients - TON API client configs or clients.
+   * @param {number} retries - The number of failover retries.
+   * @returns {TonApiClient} The TON API client with a failover API.
+   */
+  static _createTonApiClientWithFailover (tonApiClients, retries) {
+    const failoverProvider = new FailoverProvider({ retries })
+
+    const clients = tonApiClients.map((entry) => {
+      return entry instanceof TonApiClient
+        ? entry
+        : new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
+    })
+
+    for (const client of clients) {
+      failoverProvider.addProvider(client.http)
+    }
+
+    const tonApiClient = new TonApiClient()
+    tonApiClient.http = failoverProvider.initialize()
+
+    return tonApiClient
   }
 
   /**

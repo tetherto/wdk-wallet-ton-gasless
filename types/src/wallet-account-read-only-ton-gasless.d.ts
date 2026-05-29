@@ -71,6 +71,16 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * @returns {Promise<TonTransactionReceipt | null>} - The receipt, or null if the transaction has not been included in a block yet.
      */
     getTransactionReceipt(hash: string): Promise<TonTransactionReceipt | null>;
+    
+    /**
+     * Creates a TON API client whose internal API calls fail over across configured clients.
+     *
+     * @protected
+     * @param {Array<TonApiClientConfig | TonApiClient>} tonApiClients - TON API client configs or clients.
+     * @param {number} retries - The number of failover retries.
+     * @returns {TonApiClient} The TON API client with a failover API.
+     */
+    protected static _createTonApiClientWithFailover (tonApiClients: Array<TonApiClientConfig | TonApiClient>, retries: number): TonApiClient;
     /**
      * Creates and returns an internal message to execute the given token transfer.
      *
