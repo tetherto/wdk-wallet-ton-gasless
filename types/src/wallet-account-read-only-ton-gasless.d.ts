@@ -128,7 +128,7 @@ export type TonApiClientConfig = {
 };
 export type TonGaslessWalletConfig = {
     /**
-     * - The ton configuration or ton client {@link TonClient}. It's also possible to provide an array of configs or clientss instead. In such case, connection errors will cause the wallet to automatically fallback on the next client in the list.
+     * - The ton configuration or ton client {@link TonClient}. It's also possible to provide an array of configs or clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next client in the list.
      */
     tonClient: TonClientConfig | TonClient | Array<TonClientConfig | TonClient>;
     /**
