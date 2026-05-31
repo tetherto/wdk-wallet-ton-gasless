@@ -18,6 +18,7 @@ For detailed documentation about the complete WDK ecosystem, visit [docs.wallet.
 - **Paymaster Integration**: Built-in support for paymaster-based fee delegation
 - **Jetton Support**: Query native TON and Jetton token balances using smart contract interactions
 - **Message Signing**: Sign and verify messages using TON cryptography
+- **Failover Providers**: Pass an array of `tonClient` and/or `tonApiClient` configs to enable automatic round-robin failover
 
 ## ⬇️ Installation
 

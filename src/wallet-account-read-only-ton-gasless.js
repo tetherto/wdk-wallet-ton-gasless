@@ -17,6 +17,8 @@ import { WalletAccountReadOnly } from '@tetherto/wdk-wallet'
 
 import { WalletAccountReadOnlyTon } from '@tetherto/wdk-wallet-ton'
 
+import FailoverProvider from '@tetherto/wdk-failover-provider'
+
 import { Address, beginCell, internal, toNano, storeMessage } from '@ton/ton'
 
 import { TonApiClient } from '@ton-api/client'
@@ -47,8 +49,9 @@ import { TonApiClient } from '@ton-api/client'
 
 /**
  * @typedef {Object} TonGaslessWalletConfig
- * @property {TonClientConfig | TonClient} tonClient - The ton client configuration, or an instance of the {@link TonClient} class.
- * @property {TonApiClientConfig | TonApiClient} tonApiClient - The ton api client configuration, or an instance of the {@link TonApiClient} class.
+ * @property {TonClientConfig | TonClient | Array<TonClientConfig | TonClient>} tonClient - The ton configuration or ton client {@link TonClient}. It's also possible to provide an array of configs or clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next client in the list.
+ * @property {TonApiClientConfig | TonApiClient | Array<TonApiClientConfig | TonApiClient>} tonApiClient - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list.
+ * @property {number} [retries] - If set and if 'tonClient' and 'tonApiClient' are lists of configs or clients, the number of additional retry attempts after the initial call fails. Total attempts = `1 + retries`. For example, `retries: 3` with 4 clients will try each client once before throwing. If `retries` exceeds the number of clients, the failover will loop back and retry already-failed clients in round-robin order. Default: 3.
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
  * @property {number | bigint} [transferMaxFee] - The maximum fee amount for transfer operations.
@@ -57,6 +60,14 @@ import { TonApiClient } from '@ton-api/client'
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
 
 export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOnly {
+  /**
+   * The ton api client.
+   *
+   * @protected
+   * @type {TonApiClient}
+   */
+  _tonApiClient
+
   /**
    * Creates a new read-only ton gasless wallet account.
    *
@@ -76,15 +87,14 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      */
     this._config = config
 
-    if (config.tonApiClient) {
-      const { tonApiClient } = config
+    const { tonApiClient, retries = 3 } = config
 
-      /**
-       * The ton api client.
-       *
-       * @protected
-       * @type {TonApiClient | undefined}
-       */
+    if (Array.isArray(tonApiClient)) {
+      if (!tonApiClient.length) {
+        throw new Error("The 'tonApiClient' option cannot be set to an empty list.")
+      }
+      this._tonApiClient = WalletAccountReadOnlyTonGasless._createTonApiClientWithFailover(tonApiClient, retries)
+    } else {
       this._tonApiClient = tonApiClient instanceof TonApiClient
         ? tonApiClient
         : new TonApiClient({ baseUrl: tonApiClient.url, apiKey: tonApiClient.secretKey })
@@ -131,7 +141,9 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * @returns {Promise<Omit<TransactionResult, 'hash'>>} The transaction's quotes.
    */
   async quoteSendTransaction (tx) {
-    throw new Error("Method 'quoteSendTransaction(tx)' not supported on ton gasless.")
+    throw new Error(
+      "Method 'quoteSendTransaction(tx)' not supported on ton gasless."
+    )
   }
 
   /**
@@ -144,7 +156,10 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   async quoteTransfer (options, config) {
     const message = await this._getGaslessTokenTransferMessage(options)
 
-    const { commission } = await this._getGaslessTokenTransferRawParams(message, config ?? this._config)
+    const { commission } = await this._getGaslessTokenTransferRawParams(
+      message,
+      config ?? this._config
+    )
 
     return { fee: commission }
   }
@@ -171,6 +186,37 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   }
 
   /**
+   * Creates a TON API client whose internal API calls fail over across configured clients.
+   *
+   * @protected
+   * @param {Array<TonApiClientConfig | TonApiClient>} tonApiClients - TON API client configs or clients.
+   * @param {number} retries - The number of failover retries.
+   * @returns {TonApiClient} The TON API client with a failover API.
+   */
+  static _createTonApiClientWithFailover (tonApiClients, retries) {
+    const failoverProvider = new FailoverProvider({ retries })
+
+    let tonApiClient
+
+    const clients = tonApiClients.map((entry) => {
+      if (entry instanceof TonApiClient) {
+        if (!tonApiClient) tonApiClient = entry
+        return entry
+      }
+      return new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
+    })
+
+    for (const client of clients) {
+      failoverProvider.addProvider(client.http)
+    }
+
+    tonApiClient = tonApiClient || new TonApiClient()
+    tonApiClient.http = failoverProvider.initialize()
+
+    return tonApiClient
+  }
+
+  /**
    * Creates and returns an internal message to execute the given token transfer.
    *
    * @protected
@@ -182,7 +228,8 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
 
     const { relayAddress } = await this._tonApiClient.gasless.gaslessConfig()
 
-    const jettonWalletAddress = await this._tonReadOnlyAccount._getJettonWalletAddress(token)
+    const jettonWalletAddress =
+      await this._tonReadOnlyAccount._getJettonWalletAddress(token)
 
     const queryId = this._tonReadOnlyAccount._generateQueryId()
 
@@ -223,13 +270,11 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
       {
         walletAddress: wallet.address,
         walletPublicKey: Buffer.from(wallet.publicKey).toString('hex'),
-        messages: [{
-          boc: beginCell()
-            .storeWritable(
-              storeMessage(message)
-            )
-            .endCell()
-        }]
+        messages: [
+          {
+            boc: beginCell().storeWritable(storeMessage(message)).endCell()
+          }
+        ]
       }
     )
 
