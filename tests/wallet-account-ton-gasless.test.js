@@ -359,7 +359,7 @@ describe('WalletAccountTonGasless', () => {
       testAccount.dispose()
 
       expect(disposeSpy).toHaveBeenCalledTimes(1)
-      expect(testAccount.keyPair.privateKey).toBeUndefined()
+      expect(testAccount.keyPair.privateKey).toBe(null)
     })
   })
 })
