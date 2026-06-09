@@ -55,6 +55,7 @@ import { TonApiClient } from '@ton-api/client'
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
  * @property {number | bigint} [transferMaxFee] - The maximum fee amount for transfer operations.
+ * @property {number | bigint} [transactionMaxFee] - The maximum fee amount for sendTransaction and signTransaction operations.
  */
 
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
@@ -72,7 +73,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * Creates a new read-only ton gasless wallet account.
    *
    * @param {string | Uint8Array} publicKey - The account's public key.
-   * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee'>} config - The configuration object.
+   * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>} config - The configuration object.
    */
   constructor (publicKey, config) {
     const tonReadOnlyAccount = new WalletAccountReadOnlyTon(publicKey, config)
@@ -83,7 +84,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * The read-only ton gasless wallet account configuration.
      *
      * @protected
-     * @type {Omit<TonGaslessWalletConfig, 'transferMaxFee'>}
+     * @type {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>}
      */
     this._config = config
 
