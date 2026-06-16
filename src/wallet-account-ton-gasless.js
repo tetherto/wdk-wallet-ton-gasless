@@ -131,7 +131,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     const rawParams = await this._getGaslessTokenTransferRawParams(message, { paymasterToken })
     const fee = rawParams.commission
 
-    if (transferMaxFee !== undefined && fee >= transferMaxFee) {
+    if (transferMaxFee !== undefined && fee > transferMaxFee) {
       throw new Error('The transfer operation exceeds the transfer max fee.')
     }
 
