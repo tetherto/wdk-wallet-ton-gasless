@@ -66,6 +66,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
      * @param {TransferOptions} options - The transfer's options.
      * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
      * @returns {Promise<TransferResult>} The transfer's result.
+     * @throws {Error} If the transfer's cost exceeds the maximum transfer fee option.
      */
     transfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
     /**
