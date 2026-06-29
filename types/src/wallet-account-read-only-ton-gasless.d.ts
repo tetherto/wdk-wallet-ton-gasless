@@ -3,16 +3,16 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * Creates a new read-only ton gasless wallet account.
      *
      * @param {string | Uint8Array} publicKey - The account's public key.
-     * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee'>} config - The configuration object.
+     * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>} config - The configuration object.
      */
-    constructor(publicKey: string | Uint8Array, config: Omit<TonGaslessWalletConfig, "transferMaxFee">);
+    constructor(publicKey: string | Uint8Array, config: Omit<TonGaslessWalletConfig, "transferMaxFee" | "transactionMaxFee">);
     /**
      * The read-only ton gasless wallet account configuration.
      *
      * @protected
-     * @type {Omit<TonGaslessWalletConfig, 'transferMaxFee'>}
+     * @type {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>}
      */
-    protected _config: Omit<TonGaslessWalletConfig, "transferMaxFee">;
+    protected _config: Omit<TonGaslessWalletConfig, "transferMaxFee" | "transactionMaxFee">;
     /**
      * The ton api client.
      *
@@ -149,6 +149,10 @@ export type TonGaslessWalletConfig = {
      * - The maximum fee amount for transfer operations.
      */
     transferMaxFee?: number | bigint;
+    /**
+     * - The maximum fee amount for sendTransaction and signTransaction operations.
+     */
+    transactionMaxFee?: number | bigint;
 };
 import { WalletAccountReadOnly } from '@tetherto/wdk-wallet';
 import { TonApiClient } from '@ton-api/client';

@@ -123,6 +123,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * @param {TransferOptions} options - The transfer's options.
    * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
    * @returns {Promise<TransferResult>} The transfer's result.
+   * @throws {Error} If the transfer's cost exceeds the maximum transfer fee option.
    */
   async transfer (options, config) {
     const { paymasterToken, transferMaxFee } = config ?? this._config
@@ -131,7 +132,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     const rawParams = await this._getGaslessTokenTransferRawParams(message, { paymasterToken })
     const fee = rawParams.commission
 
-    if (transferMaxFee !== undefined && fee >= transferMaxFee) {
+    if (transferMaxFee !== undefined && fee > transferMaxFee) {
       throw new Error('The transfer operation exceeds the transfer max fee.')
     }
 
