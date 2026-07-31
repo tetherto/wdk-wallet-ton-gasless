@@ -21,6 +21,7 @@
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferOptions} TransferOptions */
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionInfo} TonTransactionInfo */
 
 /** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonClientConfig} TonClientConfig */
 /** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */

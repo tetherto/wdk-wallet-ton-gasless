@@ -67,10 +67,22 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     /**
      * Returns a transaction's receipt.
      *
+     * @deprecated Use {@link getTransaction} instead, which returns a normalized, finality-based receipt. The raw ton transaction remains available on its `transaction` property.
      * @param {string} hash - The transaction's hash.
      * @returns {Promise<TonTransactionReceipt | null>} - The receipt, or null if the transaction has not been included in a block yet.
      */
     getTransactionReceipt(hash: string): Promise<TonTransactionReceipt | null>;
+    /**
+     * Returns a normalized, finality-based receipt for a transaction.
+     *
+     * @param {string} hash - The transaction's message body hash.
+     * @returns {Promise<TonTransactionInfo | null>} The normalized receipt, or null if the transaction is not known.
+     */
+    getTransaction(hash: string): Promise<TonTransactionInfo | null>;
+    /** @protected @type {number} */
+    protected get _defaultWaitInterval(): number;
+    /** @protected @type {number} */
+    protected get _defaultWaitTimeout(): number;
     
     /**
      * Creates a TON API client whose internal API calls fail over across configured clients.
@@ -106,6 +118,7 @@ export type TransactionResult = import("@tetherto/wdk-wallet-ton").TransactionRe
 export type TransferOptions = import("@tetherto/wdk-wallet-ton").TransferOptions;
 export type TransferResult = import("@tetherto/wdk-wallet-ton").TransferResult;
 export type TonTransactionReceipt = import("@tetherto/wdk-wallet-ton").TonTransactionReceipt;
+export type TonTransactionInfo = import("@tetherto/wdk-wallet-ton").TonTransactionInfo;
 export type TonClientConfig = {
     /**
      * - The url of the ton center api.

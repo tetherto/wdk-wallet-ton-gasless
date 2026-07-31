@@ -34,6 +34,7 @@ import { TonApiClient } from '@ton-api/client'
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
 
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionInfo} TonTransactionInfo */
 
 /**
  * @typedef {Object} TonClientConfig
@@ -179,11 +180,32 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   /**
    * Returns a transaction's receipt.
    *
+   * @deprecated Use {@link getTransaction} instead, which returns a normalized, finality-based receipt. The raw ton transaction remains available on its `transaction` property.
    * @param {string} hash - The transaction's hash.
    * @returns {Promise<TonTransactionReceipt | null>} - The receipt, or null if the transaction has not been included in a block yet.
    */
   async getTransactionReceipt (hash) {
     return await this._tonReadOnlyAccount.getTransactionReceipt(hash)
+  }
+
+  /**
+   * Returns a normalized, finality-based receipt for a transaction.
+   *
+   * @param {string} hash - The transaction's message body hash.
+   * @returns {Promise<TonTransactionInfo | null>} The normalized receipt, or null if the transaction is not known.
+   */
+  async getTransaction (hash) {
+    return await this._tonReadOnlyAccount.getTransaction(hash)
+  }
+
+  /** @protected @type {number} */
+  get _defaultWaitInterval () {
+    return this._tonReadOnlyAccount._defaultWaitInterval
+  }
+
+  /** @protected @type {number} */
+  get _defaultWaitTimeout () {
+    return this._tonReadOnlyAccount._defaultWaitTimeout
   }
 
   /**
