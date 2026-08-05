@@ -285,7 +285,7 @@ describe('WalletAccountReadOnlyTonGasless', () => {
     test('should delegate to underlying tonReadOnlyAccount', async () => {
       const MESSAGE_HASH = 'e3dafa8c96cee59affae9a9ce1c1ac0661ba2b041bee6b46fd188f61ee70582a'
 
-      const info = { id: MESSAGE_HASH, finality: 'final', success: true }
+      const info = { hash: MESSAGE_HASH, finality: 'final', success: true }
       const getTransactionSpy = jest.spyOn(account._tonReadOnlyAccount, 'getTransaction').mockResolvedValue(info)
 
       const result = await account.getTransaction(MESSAGE_HASH)
