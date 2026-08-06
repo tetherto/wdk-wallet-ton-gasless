@@ -80,11 +80,6 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * @throws {NoSuchElementError} If no transaction has been found for the given hash.
      */
     getTransaction(hash: string): Promise<TonTransactionInfo>;
-    /** @protected @type {number} */
-    protected get _defaultWaitInterval(): number;
-    /** @protected @type {number} */
-    protected get _defaultWaitTimeout(): number;
-    
     /**
      * Creates a TON API client whose internal API calls fail over across configured clients.
      *

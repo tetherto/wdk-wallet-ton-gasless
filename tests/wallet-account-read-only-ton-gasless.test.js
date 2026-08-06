@@ -293,10 +293,5 @@ describe('WalletAccountReadOnlyTonGasless', () => {
       expect(getTransactionSpy).toHaveBeenCalledWith(MESSAGE_HASH)
       expect(result).toBe(info)
     })
-
-    test('should expose the wrapped default wait interval and timeout', () => {
-      expect(account._defaultWaitInterval).toBe(account._tonReadOnlyAccount._defaultWaitInterval)
-      expect(account._defaultWaitTimeout).toBe(account._tonReadOnlyAccount._defaultWaitTimeout)
-    })
   })
 })

@@ -199,16 +199,6 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     return await this._tonReadOnlyAccount.getTransaction(hash)
   }
 
-  /** @protected @type {number} */
-  get _defaultWaitInterval () {
-    return this._tonReadOnlyAccount._defaultWaitInterval
-  }
-
-  /** @protected @type {number} */
-  get _defaultWaitTimeout () {
-    return this._tonReadOnlyAccount._defaultWaitTimeout
-  }
-
   /**
    * Creates a TON API client whose internal API calls fail over across configured clients.
    *
