@@ -192,7 +192,8 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * Returns a normalized, finality-based receipt for a transaction.
    *
    * @param {string} hash - The transaction's message body hash.
-   * @returns {Promise<TonTransactionInfo | null>} The normalized receipt, or null if the transaction is not known.
+   * @returns {Promise<TonTransactionInfo>} The normalized receipt.
+   * @throws {NoSuchElementError} If no transaction has been found for the given hash.
    */
   async getTransaction (hash) {
     return await this._tonReadOnlyAccount.getTransaction(hash)
