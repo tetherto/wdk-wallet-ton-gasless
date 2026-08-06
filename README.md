@@ -572,8 +572,6 @@ new WalletAccountReadOnlyTonGasless(publicKey, config)
 | `getTokenBalance(tokenAddress)` | Returns the balance of a specific token | `Promise<bigint>` |
 | `getPaymasterTokenBalance()` | Returns the balance of the paymaster token | `Promise<bigint>` |
 | `quoteTransfer(options, config?)` | Estimates the fee for a token transfer | `Promise<{fee: bigint}>` |
-| `getTransaction(hash)` | Returns a normalized, finality-based transaction receipt | `Promise<TonTransactionInfo>` |
-| `waitForTransaction(hash, options?)` | Polls until the transaction reaches the target finality (or times out) | `Promise<TonTransactionInfo>` |
 | `verify(message, signature)` | Verifies a message signature | `Promise<boolean>` |
 
 ##### `getBalance()`
@@ -639,41 +637,6 @@ const quote = await readOnlyAccount.quoteTransfer({
 })
 console.log('Estimated fee (paymaster will cover):', quote.fee, 'nanotons')
 console.log('Estimated fee in TON:', Number(quote.fee) / 1e9)
-```
-
-##### `getTransaction(hash)`
-Returns a normalized, finality-based receipt that maps TON's native state onto a common cross-chain shape (`finality`, `success`, `block`, `fee`, plus the raw transaction).
-
-**Parameters:**
-- `hash` (string): The transaction's identifier (`lt:hash`)
-
-**Returns:** `Promise<TonTransactionInfo>` - The normalized receipt
-
-**Throws:** `NoSuchElementError` if no transaction is found for the given hash.
-
-**Example:**
-```javascript
-const receipt = await readOnlyAccount.getTransaction('12345:abc...')
-console.log(receipt.finality, receipt.success)
-```
-
-##### `waitForTransaction(hash, options?)`
-Polls `getTransaction` until the transaction reaches the requested finality target, then returns the terminal receipt. Only throws on timeout — callers inspect `finality`/`success` on the returned receipt rather than catching errors for failed or dropped transactions.
-
-**Parameters:**
-- `hash` (string): The transaction's identifier (`lt:hash`)
-- `options` (object, optional):
-  - `target` (string, optional): `'confirmed'` or `'final'` (default: `'confirmed'`)
-  - `timeout` (number, optional): Total time budget in ms (default: `60000`)
-  - `interval` (number, optional): Poll cadence in ms (default: `4000`)
-
-**Returns:** `Promise<TonTransactionInfo>` - The terminal receipt once the target is reached
-
-**Throws:** `TimeoutError` if the target is not reached before the timeout.
-
-**Example:**
-```javascript
-const receipt = await readOnlyAccount.waitForTransaction('12345:abc...', { target: 'final' })
 ```
 
 ##### `verify(message, signature)`
