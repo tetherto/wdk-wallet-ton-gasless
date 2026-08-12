@@ -201,6 +201,31 @@ describe('WalletAccountTonGasless', () => {
   })
 
   describe('transfer', () => {
+    const TRANSFER = {
+      token: null,
+      recipient: RECIPIENT.address,
+      amount: 1_000
+    }
+
+    async function prepareTokenTransfer () {
+      const transfer = { ...TRANSFER, token: testToken.address.toString() }
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+
+      return transfer
+    }
+
+    function mutateGaslessEstimate (mutate) {
+      const estimate = tonApiClient.gasless.gaslessEstimate
+
+      jest.spyOn(tonApiClient.gasless, 'gaslessEstimate').mockImplementation(async (...args) => {
+        const rawParams = await estimate(...args)
+        mutate(rawParams)
+        return rawParams
+      })
+    }
+
     test('should successfully transfer tokens', async () => {
       const TRANSFER = {
         token: testToken.address.toString(),
@@ -221,13 +246,78 @@ describe('WalletAccountTonGasless', () => {
       const { hash, fee } = await account.transfer(TRANSFER)
 
       expect(hash).toBeDefined()
-      expect(hash).toBe('4ee6eb54f84f264a2322bf164f6d8800cfe2a7c9a5235c82d453d6d056a47287')
+      expect(hash).toBe('2bf4cd621b09ad2bf8f9867e4e9d0611255ad1c76e806616234568888d606b88')
 
       expect(fee).toBe(5_000_000n)
 
       expect(gaslessConfigSpy).toHaveBeenCalledTimes(1)
       expect(gaslessEstimateSpy).toHaveBeenCalledTimes(1)
       expect(gaslessSendSpy).toHaveBeenCalledTimes(1)
+    })
+
+    test('should reject a relay-mutated original transfer before signing', async () => {
+      const transfer = await prepareTokenTransfer()
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+      mutateGaslessEstimate(rawParams => {
+        rawParams.messages[1].address = tonApiClient.relayAddress
+      })
+
+      await expect(account.transfer(transfer))
+        .rejects.toThrow('The gasless estimate changed the requested Jetton transfer.')
+      expect(gaslessSendSpy).not.toHaveBeenCalled()
+    })
+
+    test('should reject a relay-mutated transfer amount before signing', async () => {
+      const transfer = await prepareTokenTransfer()
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+      mutateGaslessEstimate(rawParams => {
+        rawParams.messages[1].amount = '5000000000'
+      })
+
+      await expect(account.transfer(transfer))
+        .rejects.toThrow('The gasless estimate changed the requested Jetton transfer.')
+      expect(gaslessSendSpy).not.toHaveBeenCalled()
+    })
+
+    test('should reject a relay-mutated commission transfer before signing', async () => {
+      const transfer = await prepareTokenTransfer()
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+      mutateGaslessEstimate(rawParams => {
+        rawParams.messages[0].amount = '50000001'
+      })
+
+      await expect(account.transfer(transfer))
+        .rejects.toThrow('The gasless estimate returned an invalid commission message.')
+      expect(gaslessSendSpy).not.toHaveBeenCalled()
+    })
+
+    test('should reject unexpected relay messages before signing', async () => {
+      const transfer = await prepareTokenTransfer()
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+      mutateGaslessEstimate(rawParams => {
+        rawParams.messages.push({ ...rawParams.messages[1] })
+      })
+
+      await expect(account.transfer(transfer))
+        .rejects.toThrow('The gasless estimate returned an unexpected message set.')
+      expect(gaslessSendSpy).not.toHaveBeenCalled()
+    })
+
+    test('should reject an expired relay estimate before signing', async () => {
+      const transfer = await prepareTokenTransfer()
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+      mutateGaslessEstimate(rawParams => {
+        rawParams.validUntil = Math.floor(Date.now() / 1_000) - 1
+      })
+
+      await expect(account.transfer(transfer))
+        .rejects.toThrow('The gasless estimate returned an invalid expiry.')
+      expect(gaslessSendSpy).not.toHaveBeenCalled()
     })
 
     test('should generate different hashes for identical token transfers', async () => {
@@ -252,9 +342,9 @@ describe('WalletAccountTonGasless', () => {
       const result2 = await account.transfer(TRANSFER)
       const result3 = await account.transfer(TRANSFER)
 
-      expect(result1.hash).toBe('0e0ea3ccffcefebd056cc44bf626e21329817add0a0dc10cf9aa687aed1c1aa2')
-      expect(result2.hash).toBe('77689f241dc0e6f3a318907904973730a610ce30ba293135c9af505c7b9bb7b5')
-      expect(result3.hash).toBe('5f5a1865c7709fbdd83eeb8a4f68cd1a5f9568b3dd12a71b36ced9f3532ac791')
+      expect(result1.hash).toBe('0595630fec2d35b3b736da319783a1fec813222bccbcd3d1ad353a750a433038')
+      expect(result2.hash).toBe('6a05221e72db930c35934fec5abbc203ee785154078fb136d4cd679bbc3e2af3')
+      expect(result3.hash).toBe('d4ae3a7d60c21a29c63a99829b3da2a0fed2ecf4244ab62cc9f43357ffc390e0')
       expect(gaslessSendSpy).toHaveBeenCalledTimes(3)
     })
 

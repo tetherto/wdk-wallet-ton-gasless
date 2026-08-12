@@ -98,6 +98,26 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * @returns {Promise<SignRawParams>} The ton api's raw parameters.
      */
     protected _getGaslessTokenTransferRawParams(message: MessageRelaxed, { paymasterToken }: Pick<TonGaslessWalletConfig, "paymasterToken">): Promise<SignRawParams>;
+    /**
+     * Validates that the relay estimate preserves the requested transfer and only
+     * adds the advertised commission transfer.
+     *
+     * @protected
+     * @param {SignRawParams} rawParams - The ton api's raw parameters.
+     * @param {MessageRelaxed} originalMessage - The original Jetton transfer message.
+     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken'>} config - The configuration object.
+     * @returns {Promise<void>}
+     * @throws {Error} If the relay estimate changes the requested transfer or returns an invalid commission message.
+     */
+    protected _validateGaslessTokenTransferRawParams(rawParams: SignRawParams, originalMessage: MessageRelaxed, { paymasterToken }: Pick<TonGaslessWalletConfig, "paymasterToken">): Promise<void>;
+    /**
+     * Returns the Jetton wallet address for the account and a specific master.
+     *
+     * @private
+     * @param {string} masterAddress - The Jetton master address.
+     * @returns {Promise<Address>} The account's Jetton wallet address.
+     */
+    private _getJettonWalletAddressForMaster;
 }
 export type MessageRelaxed = import("@ton/ton").MessageRelaxed;
 export type SignRawParams = import("@ton-api/client").SignRawParams;
