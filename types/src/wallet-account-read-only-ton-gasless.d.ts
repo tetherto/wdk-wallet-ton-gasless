@@ -76,19 +76,19 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * Returns a normalized, finality-based receipt for a transaction.
      *
      * @param {string} hash - The transaction's message body hash.
-     * @returns {Promise<TonTransactionInfo>} The normalized receipt.
+     * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The normalized receipt.
      * @throws {NoSuchElementError} If no transaction has been found for the given hash.
      */
-    getTransaction(hash: string): Promise<TonTransactionInfo>;
+    getTransaction(hash: string): Promise<TransactionReceipt & TonTransactionDetails>;
     /**
      * Blocks until a transaction reaches a terminal state (the requested finality target or `dropped`), or times out.
      *
      * @param {string} hash - The transaction's message body hash.
      * @param {WaitForTransactionOptions} [options] - The wait options.
-     * @returns {Promise<TonTransactionInfo>} The terminal receipt: the finality target reached (inspect `success` to tell success from revert), or `dropped`.
+     * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The terminal receipt: the finality target reached (inspect `success` to tell success from revert), or `dropped`.
      * @throws {TimeoutError} If the target is not reached before the timeout.
      */
-    waitForTransaction(hash: string, options?: WaitForTransactionOptions): Promise<TonTransactionInfo>;
+    waitForTransaction(hash: string, options?: WaitForTransactionOptions): Promise<TransactionReceipt & TonTransactionDetails>;
     /**
      * Creates a TON API client whose internal API calls fail over across configured clients.
      *
@@ -123,7 +123,8 @@ export type TransactionResult = import("@tetherto/wdk-wallet-ton").TransactionRe
 export type TransferOptions = import("@tetherto/wdk-wallet-ton").TransferOptions;
 export type TransferResult = import("@tetherto/wdk-wallet-ton").TransferResult;
 export type TonTransactionReceipt = import("@tetherto/wdk-wallet-ton").TonTransactionReceipt;
-export type TonTransactionInfo = import("@tetherto/wdk-wallet-ton").TonTransactionInfo;
+export type TonTransactionDetails = import("@tetherto/wdk-wallet-ton").TonTransactionDetails;
+export type TransactionReceipt = import("@tetherto/wdk-wallet").TransactionReceipt;
 export type WaitForTransactionOptions = import("@tetherto/wdk-wallet").WaitForTransactionOptions;
 export type TonClientConfig = {
     /**

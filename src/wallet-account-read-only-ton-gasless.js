@@ -34,8 +34,9 @@ import { TonApiClient } from '@ton-api/client'
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
 
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
-/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionInfo} TonTransactionInfo */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionDetails} TonTransactionDetails */
 
+/** @typedef {import('@tetherto/wdk-wallet').TransactionReceipt} TransactionReceipt */
 /** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionOptions} WaitForTransactionOptions */
 
 /**
@@ -194,7 +195,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * Returns a normalized, finality-based receipt for a transaction.
    *
    * @param {string} hash - The transaction's message body hash.
-   * @returns {Promise<TonTransactionInfo>} The normalized receipt.
+   * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The normalized receipt.
    * @throws {NoSuchElementError} If no transaction has been found for the given hash.
    */
   async getTransaction (hash) {
@@ -206,7 +207,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    *
    * @param {string} hash - The transaction's message body hash.
    * @param {WaitForTransactionOptions} [options] - The wait options.
-   * @returns {Promise<TonTransactionInfo>} The terminal receipt: the finality target reached (inspect `success` to tell success from revert), or `dropped`.
+   * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The terminal receipt: the finality target reached (inspect `success` to tell success from revert), or `dropped`.
    * @throws {TimeoutError} If the target is not reached before the timeout.
    */
   async waitForTransaction (hash, options = {}) {
