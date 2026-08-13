@@ -1,6 +1,10 @@
 export { default } from "./src/wallet-manager-ton-gasless.js";
 export { default as WalletAccountReadOnlyTonGasless } from "./src/wallet-account-read-only-ton-gasless.js";
 export { default as WalletAccountTonGasless } from "./src/wallet-account-ton-gasless.js";
+export type Finality = import("@tetherto/wdk-wallet").Finality;
+export type TransactionReceipt = import("@tetherto/wdk-wallet").TransactionReceipt;
+export type WaitForTransactionTarget = import("@tetherto/wdk-wallet").WaitForTransactionTarget;
+export type WaitForTransactionOptions = import("@tetherto/wdk-wallet").WaitForTransactionOptions;
 export type FeeRates = import("@tetherto/wdk-wallet-ton").FeeRates;
 export type KeyPair = import("@tetherto/wdk-wallet-ton").KeyPair;
 export type TonTransaction = import("@tetherto/wdk-wallet-ton").TonTransaction;

@@ -13,6 +13,11 @@
 // limitations under the License.
 'use strict'
 
+/** @typedef {import('@tetherto/wdk-wallet').Finality} Finality */
+/** @typedef {import('@tetherto/wdk-wallet').TransactionReceipt} TransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionTarget} WaitForTransactionTarget */
+/** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionOptions} WaitForTransactionOptions */
+
 /** @typedef {import('@tetherto/wdk-wallet-ton').FeeRates} FeeRates */
 
 /** @typedef {import('@tetherto/wdk-wallet-ton').KeyPair} KeyPair */

@@ -36,6 +36,8 @@ import { TonApiClient } from '@ton-api/client'
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionInfo} TonTransactionInfo */
 
+/** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionOptions} WaitForTransactionOptions */
+
 /**
  * @typedef {Object} TonClientConfig
  * @property {string} url - The url of the ton center api.
@@ -197,6 +199,18 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    */
   async getTransaction (hash) {
     return await this._tonReadOnlyAccount.getTransaction(hash)
+  }
+
+  /**
+   * Blocks until a transaction reaches a terminal state (the requested finality target or `dropped`), or times out.
+   *
+   * @param {string} hash - The transaction's message body hash.
+   * @param {WaitForTransactionOptions} [options] - The wait options.
+   * @returns {Promise<TonTransactionInfo>} The terminal receipt: the finality target reached (inspect `success` to tell success from revert), or `dropped`.
+   * @throws {TimeoutError} If the target is not reached before the timeout.
+   */
+  async waitForTransaction (hash, options = {}) {
+    return await super.waitForTransaction(hash, options)
   }
 
   /**
