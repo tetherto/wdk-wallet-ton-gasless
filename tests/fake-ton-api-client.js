@@ -1,16 +1,13 @@
 import { TonApiClient } from '@ton-api/client'
-import { Address, beginCell } from '@ton/ton'
-
-const JETTON_TRANSFER_OPCODE = 0xf8a7ea5
+import { Address, beginCell, loadMessageRelaxed, toNano } from '@ton/ton'
 
 export default class FakeTonApiClient extends TonApiClient {
-  constructor (blockchain, paymasterToken) {
+  constructor(blockchain, paymasterToken) {
     super({ baseUrl: 'http://fake-ton-api' })
 
     this.blockchain = blockchain
     this.paymasterToken = paymasterToken
     this.relayAddress = Address.parse('0QCbDJJZ9vOWkFkKo1JMa0jXBOT60KBmDybpoCmqsVPUwvNS')
-    this.mockCommission = 5_000_000n
 
     this.gasless = {
       gaslessConfig: async () => {
@@ -20,33 +17,39 @@ export default class FakeTonApiClient extends TonApiClient {
       },
 
       gaslessEstimate: async (paymasterTokenAddress, params) => {
-        const feePaymentBody = beginCell()
-          .storeUint(JETTON_TRANSFER_OPCODE, 32)
+        const mockCommission = 5_000_000n
+        const originalMessage = loadMessageRelaxed(params.messages[0].boc.beginParse())
+        const paymasterJettonWallet = await this.paymasterToken.getWalletAddress(
+          Address.parse(params.walletAddress.toString())
+        )
+        const commissionPayload = beginCell()
+          .storeUint(0xf8a7ea5, 32)
           .storeUint(0, 64)
-          .storeCoins(this.mockCommission)
+          .storeCoins(mockCommission)
           .storeAddress(this.relayAddress)
           .storeAddress(this.relayAddress)
           .storeBit(false)
-          .storeCoins(1n)
-          .storeMaybeRef(null)
+          .storeCoins(0n)
+          .storeBit(false)
           .endCell()
 
         return {
-          commission: this.mockCommission,
           relayAddress: this.relayAddress,
+          commission: mockCommission,
           from: params.walletAddress,
           validUntil: Math.floor(Date.now() / 1000) + 600,
+          protocolName: 'gasless',
           messages: [
             {
-              address: params.walletAddress.toString(),
-              amount: '1000000',
-              payload: feePaymentBody
+              address: paymasterJettonWallet,
+              amount: toNano(0.005).toString(),
+              payload: commissionPayload
             },
-            ...params.messages.map(msg => ({
-              address: params.walletAddress.toString(),
-              amount: '1000000',
-              payload: msg.boc
-            }))
+            {
+              address: originalMessage.info.dest,
+              amount: originalMessage.info.value.coins.toString(),
+              payload: originalMessage.body
+            }
           ]
         }
       },
