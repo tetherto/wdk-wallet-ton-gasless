@@ -59,6 +59,27 @@ import { TonApiClient } from '@ton-api/client'
  */
 
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
+const JETTON_TRANSFER_OPCODE = 0xf8a7ea5
+
+function addressesEqual (left, right) {
+  return Address.isAddress(left) && Address.isAddress(right) && left.equals(right)
+}
+
+function cellsEqual (left, right) {
+  try {
+    return left?.hash().equals(right?.hash()) === true
+  } catch {
+    return false
+  }
+}
+
+function parseCoins (value) {
+  try {
+    return BigInt(value)
+  } catch {
+    return null
+  }
+}
 
 export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOnly {
   /**
@@ -235,7 +256,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     const queryId = this._tonReadOnlyAccount._generateQueryId()
 
     const body = beginCell()
-      .storeUint(0xf8a7ea5, 32)
+      .storeUint(JETTON_TRANSFER_OPCODE, 32)
       .storeUint(queryId, 64)
       .storeCoins(amount)
       .storeAddress(recipient)
@@ -279,6 +300,129 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
       }
     )
 
+    await this._validateGaslessTokenTransferRawParams(rawParams, message, { paymasterToken })
+
     return rawParams
+  }
+
+  /**
+   * Validates that the relay estimate preserves the requested transfer and only
+   * adds the advertised commission transfer.
+   *
+   * @protected
+   * @param {SignRawParams} rawParams - The ton api's raw parameters.
+   * @param {MessageRelaxed} originalMessage - The original Jetton transfer message.
+   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken'>} config - The configuration object.
+   * @returns {Promise<void>}
+   * @throws {Error} If the relay estimate changes the requested transfer or returns an invalid commission message.
+   */
+  async _validateGaslessTokenTransferRawParams (rawParams, originalMessage, { paymasterToken }) {
+    const invalidCommissionMessage = 'The gasless estimate returned an invalid commission message.'
+    let relayAddress
+
+    try {
+      const originalBody = originalMessage.body.beginParse()
+
+      if (originalBody.loadUint(32) !== JETTON_TRANSFER_OPCODE) {
+        throw new Error('Invalid original transfer body.')
+      }
+
+      originalBody.loadUintBig(64)
+      originalBody.loadCoins()
+      originalBody.loadAddress()
+      relayAddress = originalBody.loadAddress()
+    } catch {
+      throw new Error('The original Jetton transfer message is invalid.')
+    }
+
+    if (!addressesEqual(rawParams?.relayAddress, relayAddress)) {
+      throw new Error('The gasless estimate returned an unexpected relay address.')
+    }
+    if (!addressesEqual(rawParams.from, this._tonReadOnlyAccount._wallet.address)) {
+      throw new Error('The gasless estimate returned an unexpected sender address.')
+    }
+    if (!Number.isSafeInteger(rawParams.validUntil) || rawParams.validUntil <= Math.floor(Date.now() / 1_000)) {
+      throw new Error('The gasless estimate returned an invalid expiry.')
+    }
+    if (typeof rawParams.commission !== 'bigint' || rawParams.commission <= 0n) {
+      throw new Error('The gasless estimate returned an invalid commission.')
+    }
+    if (!Array.isArray(rawParams.messages) || rawParams.messages.length !== 2) {
+      throw new Error('The gasless estimate returned an unexpected message set.')
+    }
+
+    const original = rawParams.messages.find(message => {
+      return addressesEqual(message?.address, originalMessage.info.dest) &&
+        parseCoins(message.amount) === originalMessage.info.value.coins &&
+        cellsEqual(message.payload, originalMessage.body) &&
+        !message.stateInit
+    })
+
+    if (!original) {
+      throw new Error('The gasless estimate changed the requested Jetton transfer.')
+    }
+
+    const commissionMessages = rawParams.messages.filter(message => message !== original)
+    const commissionMessage = commissionMessages[0]
+    const commissionMessageAmount = parseCoins(commissionMessage?.amount)
+    const paymasterJettonWallet = await this._getJettonWalletAddressForMaster(paymasterToken.address)
+
+    if (!addressesEqual(commissionMessage?.address, paymasterJettonWallet) ||
+        commissionMessageAmount === null ||
+        commissionMessageAmount < 0n ||
+        commissionMessageAmount > DUMMY_MESSAGE_VALUE ||
+        commissionMessage.stateInit ||
+        !commissionMessage.payload) {
+      throw new Error(invalidCommissionMessage)
+    }
+
+    try {
+      const commissionBody = commissionMessage.payload.beginParse()
+
+      if (commissionBody.loadUint(32) !== JETTON_TRANSFER_OPCODE) {
+        throw new Error(invalidCommissionMessage)
+      }
+
+      commissionBody.loadUintBig(64)
+      const commission = commissionBody.loadCoins()
+      const destination = commissionBody.loadAddress()
+      const responseDestination = commissionBody.loadAddress()
+      const customPayload = commissionBody.loadMaybeRef()
+      const forwardTonAmount = commissionBody.loadCoins()
+      const forwardPayloadInRef = commissionBody.loadBit()
+
+      if (commission !== rawParams.commission ||
+          !addressesEqual(destination, relayAddress) ||
+          !addressesEqual(responseDestination, relayAddress) ||
+          customPayload ||
+          forwardTonAmount !== 0n ||
+          forwardPayloadInRef ||
+          commissionBody.remainingBits !== 0 ||
+          commissionBody.remainingRefs !== 0) {
+        throw new Error(invalidCommissionMessage)
+      }
+    } catch {
+      throw new Error(invalidCommissionMessage)
+    }
+  }
+
+  /**
+   * Returns the Jetton wallet address for the account and a specific master.
+   *
+   * @private
+   * @param {string} masterAddress - The Jetton master address.
+   * @returns {Promise<Address>} The account's Jetton wallet address.
+   */
+  async _getJettonWalletAddressForMaster (masterAddress) {
+    const { stack } = await this._tonReadOnlyAccount._tonClient.callGetMethod(
+      Address.parse(masterAddress),
+      'get_wallet_address',
+      [{
+        type: 'slice',
+        cell: beginCell().storeAddress(this._tonReadOnlyAccount._wallet.address).endCell()
+      }]
+    )
+
+    return stack.readAddress()
   }
 }

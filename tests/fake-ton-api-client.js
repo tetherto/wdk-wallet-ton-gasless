@@ -1,5 +1,5 @@
 import { TonApiClient } from '@ton-api/client'
-import { Address } from '@ton/ton'
+import { Address, beginCell, loadMessageRelaxed, toNano } from '@ton/ton'
 
 export default class FakeTonApiClient extends TonApiClient {
   constructor(blockchain, paymasterToken) {
@@ -18,16 +18,39 @@ export default class FakeTonApiClient extends TonApiClient {
 
       gaslessEstimate: async (paymasterTokenAddress, params) => {
         const mockCommission = 5_000_000n
+        const originalMessage = loadMessageRelaxed(params.messages[0].boc.beginParse())
+        const paymasterJettonWallet = await this.paymasterToken.getWalletAddress(
+          Address.parse(params.walletAddress.toString())
+        )
+        const commissionPayload = beginCell()
+          .storeUint(0xf8a7ea5, 32)
+          .storeUint(0, 64)
+          .storeCoins(mockCommission)
+          .storeAddress(this.relayAddress)
+          .storeAddress(this.relayAddress)
+          .storeBit(false)
+          .storeCoins(0n)
+          .storeBit(false)
+          .endCell()
 
         return {
+          relayAddress: this.relayAddress,
           commission: mockCommission,
           from: params.walletAddress,
-          valid_until: Math.floor(Date.now() / 1000) + 600,
-          messages: params.messages.map(msg => ({
-            address: this.relayAddress.toString(),
-            amount: '1000000',
-            payload: msg.boc
-          }))
+          validUntil: Math.floor(Date.now() / 1000) + 600,
+          protocolName: 'gasless',
+          messages: [
+            {
+              address: paymasterJettonWallet,
+              amount: toNano(0.005).toString(),
+              payload: commissionPayload
+            },
+            {
+              address: originalMessage.info.dest,
+              amount: originalMessage.info.value.coins.toString(),
+              payload: originalMessage.body
+            }
+          ]
         }
       },
 
