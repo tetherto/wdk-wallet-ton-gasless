@@ -25,6 +25,7 @@ import { TonApiClient } from '@ton-api/client'
 
 /** @typedef {import('@ton/ton').MessageRelaxed} MessageRelaxed */
 /** @typedef {import('@ton/ton').TonClient} TonClient */
+/** @typedef {import('@ton/ton').Cell} Cell */
 
 /** @typedef {import('@ton-api/client').SignRawParams} SignRawParams */
 
@@ -59,6 +60,7 @@ import { TonApiClient } from '@ton-api/client'
  */
 
 const DUMMY_MESSAGE_VALUE = toNano(0.05)
+const JETTON_TRANSFER_OPCODE = 0xf8a7ea5
 
 export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOnly {
   /**
@@ -262,6 +264,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * @param {MessageRelaxed} message - The message.
    * @param {Pick<TonGaslessWalletConfig, 'paymasterToken'>} config - The configuration object.
    * @returns {Promise<SignRawParams>} The ton api's raw parameters.
+   * @throws {Error} If the estimate messages do not include a recognizable jetton payment to the relay.
    */
   async _getGaslessTokenTransferRawParams (message, { paymasterToken }) {
     const wallet = this._tonReadOnlyAccount._wallet
@@ -279,6 +282,72 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
       }
     )
 
-    return rawParams
+    const paymentAmount = this._getGaslessPaymentAmount(rawParams)
+
+    return { ...rawParams, commission: paymentAmount }
+  }
+
+  /**
+   * Derives the gasless fee from the estimate messages that will be signed: the jetton transfer
+   * whose destination is the relay address (the commission payment). This binds the fee used for
+   * `transferMaxFee` to the payment that the wallet owner-signs, rather than trusting `commission` alone.
+   *
+   * @protected
+   * @param {SignRawParams} rawParams - The gasless estimate response.
+   * @returns {bigint} The decoded relay payment amount.
+   * @throws {Error} If no unique jetton transfer to the relay is present.
+   */
+  _getGaslessPaymentAmount (rawParams) {
+    const relayAddress = rawParams.relayAddress
+    if (!relayAddress) {
+      throw new Error('Invalid payment messages from gasless estimate.')
+    }
+
+    let paymentAmount
+    for (const message of rawParams.messages || []) {
+      const transfer = this._decodeJettonTransfer(message.payload)
+      if (!transfer?.destination?.equals(relayAddress)) {
+        continue
+      }
+
+      if (paymentAmount !== undefined) {
+        throw new Error('Invalid payment messages from gasless estimate.')
+      }
+
+      paymentAmount = transfer.amount
+    }
+
+    if (paymentAmount === undefined) {
+      throw new Error('Invalid payment messages from gasless estimate.')
+    }
+
+    return paymentAmount
+  }
+
+  /**
+   * @protected
+   * @param {Cell | undefined | null} payload - A candidate jetton-transfer body.
+   * @returns {{ amount: bigint, destination: Address } | null} The decoded transfer, or null if not a jetton transfer.
+   */
+  _decodeJettonTransfer (payload) {
+    if (!payload) {
+      return null
+    }
+
+    try {
+      const slice = payload.beginParse()
+      const op = slice.loadUint(32)
+      if (op !== JETTON_TRANSFER_OPCODE) {
+        return null
+      }
+
+      slice.loadUint(64)
+      const amount = slice.loadCoins()
+      const destination = slice.loadAddress()
+
+      return { amount, destination }
+    } catch {
+      return null
+    }
   }
 }

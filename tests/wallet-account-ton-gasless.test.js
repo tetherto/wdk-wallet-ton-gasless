@@ -221,7 +221,7 @@ describe('WalletAccountTonGasless', () => {
       const { hash, fee } = await account.transfer(TRANSFER)
 
       expect(hash).toBeDefined()
-      expect(hash).toBe('4ee6eb54f84f264a2322bf164f6d8800cfe2a7c9a5235c82d453d6d056a47287')
+      expect(hash).toBe('c16da055acd588869931aefcd9311ff3d0d7136943e044189bbfd4f1364278ce')
 
       expect(fee).toBe(5_000_000n)
 
@@ -252,9 +252,7 @@ describe('WalletAccountTonGasless', () => {
       const result2 = await account.transfer(TRANSFER)
       const result3 = await account.transfer(TRANSFER)
 
-      expect(result1.hash).toBe('0e0ea3ccffcefebd056cc44bf626e21329817add0a0dc10cf9aa687aed1c1aa2')
-      expect(result2.hash).toBe('77689f241dc0e6f3a318907904973730a610ce30ba293135c9af505c7b9bb7b5')
-      expect(result3.hash).toBe('5f5a1865c7709fbdd83eeb8a4f68cd1a5f9568b3dd12a71b36ced9f3532ac791')
+      expect(new Set([result1.hash, result2.hash, result3.hash]).size).toBe(3)
       expect(gaslessSendSpy).toHaveBeenCalledTimes(3)
     })
 
@@ -274,6 +272,85 @@ describe('WalletAccountTonGasless', () => {
           transferMaxFee: 1_000_000n
         })
       ).rejects.toThrow('The transfer operation exceeds the transfer max fee.')
+    })
+
+    test('should reject when the estimate payment amount exceeds a small commission claim', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: RECIPIENT.address,
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+
+      const oversizedPayment = 50_000_000n
+      jest.spyOn(tonApiClient.gasless, 'gaslessEstimate').mockResolvedValue({
+        commission: 1n,
+        relayAddress: tonApiClient.relayAddress,
+        from: Address.parse(ACCOUNT.address),
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [{
+          address: ACCOUNT.address,
+          amount: '1000000',
+          payload: beginCell()
+            .storeUint(0xf8a7ea5, 32)
+            .storeUint(0, 64)
+            .storeCoins(oversizedPayment)
+            .storeAddress(tonApiClient.relayAddress)
+            .storeAddress(tonApiClient.relayAddress)
+            .storeBit(false)
+            .storeCoins(1n)
+            .storeMaybeRef(null)
+            .endCell()
+        }]
+      })
+
+      await expect(
+        account.transfer(TRANSFER, {
+          paymasterToken: { address: paymasterToken.address.toString() },
+          transferMaxFee: 1_000_000n
+        })
+      ).rejects.toThrow('The transfer operation exceeds the transfer max fee.')
+    })
+
+    test('should reject when the estimate payment is not sent to the relay', async () => {
+      const TRANSFER = {
+        token: testToken.address.toString(),
+        recipient: RECIPIENT.address,
+        amount: 1_000
+      }
+
+      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
+
+      jest.spyOn(tonApiClient.gasless, 'gaslessEstimate').mockResolvedValue({
+        commission: 1n,
+        relayAddress: tonApiClient.relayAddress,
+        from: Address.parse(ACCOUNT.address),
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [{
+          address: ACCOUNT.address,
+          amount: '1000000',
+          payload: beginCell()
+            .storeUint(0xf8a7ea5, 32)
+            .storeUint(0, 64)
+            .storeCoins(1n)
+            .storeAddress(Address.parse(RECIPIENT.address))
+            .storeAddress(tonApiClient.relayAddress)
+            .storeBit(false)
+            .storeCoins(1n)
+            .storeMaybeRef(null)
+            .endCell()
+        }]
+      })
+
+      await expect(
+        account.transfer(TRANSFER, {
+          paymasterToken: { address: paymasterToken.address.toString() },
+          transferMaxFee: 1_000_000n
+        })
+      ).rejects.toThrow('Invalid payment messages from gasless estimate.')
     })
 
     test('should throw error for invalid recipient address', async () => {

@@ -1,13 +1,16 @@
 import { TonApiClient } from '@ton-api/client'
-import { Address } from '@ton/ton'
+import { Address, beginCell } from '@ton/ton'
+
+const JETTON_TRANSFER_OPCODE = 0xf8a7ea5
 
 export default class FakeTonApiClient extends TonApiClient {
-  constructor(blockchain, paymasterToken) {
+  constructor (blockchain, paymasterToken) {
     super({ baseUrl: 'http://fake-ton-api' })
 
     this.blockchain = blockchain
     this.paymasterToken = paymasterToken
     this.relayAddress = Address.parse('0QCbDJJZ9vOWkFkKo1JMa0jXBOT60KBmDybpoCmqsVPUwvNS')
+    this.mockCommission = 5_000_000n
 
     this.gasless = {
       gaslessConfig: async () => {
@@ -17,17 +20,34 @@ export default class FakeTonApiClient extends TonApiClient {
       },
 
       gaslessEstimate: async (paymasterTokenAddress, params) => {
-        const mockCommission = 5_000_000n
+        const feePaymentBody = beginCell()
+          .storeUint(JETTON_TRANSFER_OPCODE, 32)
+          .storeUint(0, 64)
+          .storeCoins(this.mockCommission)
+          .storeAddress(this.relayAddress)
+          .storeAddress(this.relayAddress)
+          .storeBit(false)
+          .storeCoins(1n)
+          .storeMaybeRef(null)
+          .endCell()
 
         return {
-          commission: mockCommission,
+          commission: this.mockCommission,
+          relayAddress: this.relayAddress,
           from: params.walletAddress,
-          valid_until: Math.floor(Date.now() / 1000) + 600,
-          messages: params.messages.map(msg => ({
-            address: this.relayAddress.toString(),
-            amount: '1000000',
-            payload: msg.boc
-          }))
+          validUntil: Math.floor(Date.now() / 1000) + 600,
+          messages: [
+            {
+              address: params.walletAddress.toString(),
+              amount: '1000000',
+              payload: feePaymentBody
+            },
+            ...params.messages.map(msg => ({
+              address: params.walletAddress.toString(),
+              amount: '1000000',
+              payload: msg.boc
+            }))
+          ]
         }
       },
 
