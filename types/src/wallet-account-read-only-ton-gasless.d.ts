@@ -67,11 +67,36 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     /**
      * Returns a transaction's receipt.
      *
+     * @deprecated Use {@link getTransaction} instead, which returns a normalized, finality-based receipt. The raw ton transaction remains available on its `transaction` property.
      * @param {string} hash - The transaction's hash.
      * @returns {Promise<TonTransactionReceipt | null>} - The receipt, or null if the transaction has not been included in a block yet.
      */
     getTransactionReceipt(hash: string): Promise<TonTransactionReceipt | null>;
-    
+    /**
+     * Returns a normalized, finality-based receipt for a transaction.
+     *
+     * Note: TonCenter only indexes transactions once they are included in a block, so a
+     * returned receipt is always `confirmed` or `final` — there is no visible `pending`
+     * (mempool) state through this API.
+     *
+     * @param {string} hash - The transaction's message body hash.
+     * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The normalized receipt.
+     * @throws {NoSuchElementError} If no transaction has been found for the given hash.
+     */
+    getTransaction(hash: string): Promise<TransactionReceipt & TonTransactionDetails>;
+    /**
+     * Blocks until a transaction reaches the requested finality target, or times out.
+     *
+     * Note: there is no `dropped` path. A transaction TonCenter has not indexed yet is
+     * indistinguishable from one that will never land, so it stays not-found and a dropped
+     * transaction surfaces as a {@link TimeoutError} rather than resolving to a `dropped` receipt.
+     *
+     * @param {string} hash - The transaction's message body hash.
+     * @param {WaitForTransactionOptions} [options] - The wait options.
+     * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The terminal receipt for the finality target reached (inspect `success` to tell success from revert).
+     * @throws {TimeoutError} If the target is not reached before the timeout.
+     */
+    waitForTransaction(hash: string, options?: WaitForTransactionOptions): Promise<TransactionReceipt & TonTransactionDetails>;
     /**
      * Creates a TON API client whose internal API calls fail over across configured clients.
      *
@@ -126,6 +151,9 @@ export type TransactionResult = import("@tetherto/wdk-wallet-ton").TransactionRe
 export type TransferOptions = import("@tetherto/wdk-wallet-ton").TransferOptions;
 export type TransferResult = import("@tetherto/wdk-wallet-ton").TransferResult;
 export type TonTransactionReceipt = import("@tetherto/wdk-wallet-ton").TonTransactionReceipt;
+export type TonTransactionDetails = import("@tetherto/wdk-wallet-ton").TonTransactionDetails;
+export type TransactionReceipt = import("@tetherto/wdk-wallet").TransactionReceipt;
+export type WaitForTransactionOptions = import("@tetherto/wdk-wallet").WaitForTransactionOptions;
 export type TonClientConfig = {
     /**
      * - The url of the ton center api.

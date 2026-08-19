@@ -13,6 +13,11 @@
 // limitations under the License.
 'use strict'
 
+/** @typedef {import('@tetherto/wdk-wallet').Finality} Finality */
+/** @typedef {import('@tetherto/wdk-wallet').TransactionReceipt} TransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionTarget} WaitForTransactionTarget */
+/** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionOptions} WaitForTransactionOptions */
+
 /** @typedef {import('@tetherto/wdk-wallet-ton').FeeRates} FeeRates */
 
 /** @typedef {import('@tetherto/wdk-wallet-ton').KeyPair} KeyPair */
@@ -21,6 +26,7 @@
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferOptions} TransferOptions */
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionDetails} TonTransactionDetails */
 
 /** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonClientConfig} TonClientConfig */
 /** @typedef {import('./src/wallet-account-read-only-ton-gasless.js').TonApiClientConfig} TonApiClientConfig */

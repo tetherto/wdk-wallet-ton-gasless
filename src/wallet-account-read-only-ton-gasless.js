@@ -34,6 +34,10 @@ import { TonApiClient } from '@ton-api/client'
 /** @typedef {import('@tetherto/wdk-wallet-ton').TransferResult} TransferResult */
 
 /** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionReceipt} TonTransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet-ton').TonTransactionDetails} TonTransactionDetails */
+
+/** @typedef {import('@tetherto/wdk-wallet').TransactionReceipt} TransactionReceipt */
+/** @typedef {import('@tetherto/wdk-wallet').WaitForTransactionOptions} WaitForTransactionOptions */
 
 /**
  * @typedef {Object} TonClientConfig
@@ -200,11 +204,43 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   /**
    * Returns a transaction's receipt.
    *
+   * @deprecated Use {@link getTransaction} instead, which returns a normalized, finality-based receipt. The raw ton transaction remains available on its `transaction` property.
    * @param {string} hash - The transaction's hash.
    * @returns {Promise<TonTransactionReceipt | null>} - The receipt, or null if the transaction has not been included in a block yet.
    */
   async getTransactionReceipt (hash) {
     return await this._tonReadOnlyAccount.getTransactionReceipt(hash)
+  }
+
+  /**
+   * Returns a normalized, finality-based receipt for a transaction.
+   *
+   * Note: TonCenter only indexes transactions once they are included in a block, so a
+   * returned receipt is always `confirmed` or `final` — there is no visible `pending`
+   * (mempool) state through this API.
+   *
+   * @param {string} hash - The transaction's message body hash.
+   * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The normalized receipt.
+   * @throws {NoSuchElementError} If no transaction has been found for the given hash.
+   */
+  async getTransaction (hash) {
+    return await this._tonReadOnlyAccount.getTransaction(hash)
+  }
+
+  /**
+   * Blocks until a transaction reaches the requested finality target, or times out.
+   *
+   * Note: there is no `dropped` path. A transaction TonCenter has not indexed yet is
+   * indistinguishable from one that will never land, so it stays not-found and a dropped
+   * transaction surfaces as a {@link TimeoutError} rather than resolving to a `dropped` receipt.
+   *
+   * @param {string} hash - The transaction's message body hash.
+   * @param {WaitForTransactionOptions} [options] - The wait options.
+   * @returns {Promise<TransactionReceipt & TonTransactionDetails>} The terminal receipt for the finality target reached (inspect `success` to tell success from revert).
+   * @throws {TimeoutError} If the target is not reached before the timeout.
+   */
+  async waitForTransaction (hash, options = {}) {
+    return await super.waitForTransaction(hash, options)
   }
 
   /**
