@@ -366,6 +366,19 @@ describe('WalletAccountTonGasless', () => {
       ).rejects.toThrow('The transfer operation exceeds the transfer max fee.')
     })
 
+    test('should preserve configured max fee with a per-transfer paymaster override', async () => {
+      const transfer = await prepareTokenTransfer()
+      const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+      account._config.transferMaxFee = 1_000_000n
+
+      await expect(
+        account.transfer(transfer, {
+          paymasterToken: { address: paymasterToken.address.toString() }
+        })
+      ).rejects.toThrow('The transfer operation exceeds the transfer max fee.')
+      expect(gaslessSendSpy).not.toHaveBeenCalled()
+    })
+
     test('should throw error for invalid recipient address', async () => {
       const TRANSFER = {
         token: testToken.address.toString(),
