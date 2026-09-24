@@ -98,6 +98,15 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      */
     waitForTransaction(hash: string, options?: WaitForTransactionOptions): Promise<TransactionReceipt & TonTransactionDetails>;
     /**
+     * Builds the ton api client from the wallet configuration: a ton api config, an already-built
+     * {@link TonApiClient} reused as-is, or a list of either (with internal api calls failing over).
+     *
+     * @protected
+     * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>} [config] - The configuration object.
+     * @returns {TonApiClient} The ton api client.
+     */
+    protected static _buildTonApiClient(config?: Omit<TonGaslessWalletConfig, "transferMaxFee" | "transactionMaxFee">): TonApiClient;
+    /**
      * Creates a TON API client whose internal API calls fail over across configured clients.
      *
      * @protected

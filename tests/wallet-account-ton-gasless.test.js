@@ -191,7 +191,7 @@ describe('WalletAccountTonGasless', () => {
   describe('sign', () => {
     const MESSAGE = 'Dummy message to sign.'
 
-    const EXPECTED_SIGNATURE = '640cb213751dcff7ed5f72330ca36efd6d640b9cc1df71418ec3c4f730b3fa8e81e450386e2a00c5e87da06f3edefebadd958b7d31a22b8d430da846ce087c06'
+    const EXPECTED_SIGNATURE = 'adeb9a3d83a275f8ff385ac93731d6b19f9f0a1a3354e29503a5748be829b463414a2698f91d90f4ec40b4281957f2b3104e167681bc215a70e99768305de405'
 
     test('should return the correct signature', async () => {
       const signature = await account.sign(MESSAGE)
@@ -233,7 +233,7 @@ describe('WalletAccountTonGasless', () => {
         amount: 1_000
       }
       global.Date.now = jest.fn(() => 3_000_000_000_000)
-      global.Math.random = jest.fn().mockReturnValueOnce(0.5).mockReturnValueOnce(0.25)
+      jest.spyOn(account._tonReadOnlyAccount, '_generateQueryId').mockReturnValue(0x8000000040000000n)
 
       const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
       jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
@@ -327,12 +327,10 @@ describe('WalletAccountTonGasless', () => {
         amount: 1_000
       }
       global.Date.now = jest.fn(() => 3_000_000_000_000)
-      global.Math.random = jest.fn()
-        .mockReturnValueOnce(0.1).mockReturnValueOnce(0.2)
-        .mockReturnValueOnce(0.3).mockReturnValueOnce(0.4)
-        .mockReturnValueOnce(0.5).mockReturnValueOnce(0.6)
-
-      global.Date.now = jest.fn(() => 3_000_000_000_000)
+      jest.spyOn(account._tonReadOnlyAccount, '_generateQueryId')
+        .mockReturnValueOnce(0x1999999933333333n)
+        .mockReturnValueOnce(0x4ccccccc66666666n)
+        .mockReturnValueOnce(0x8000000099999999n)
       const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
       jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0).mockResolvedValue(1).mockResolvedValue(2)

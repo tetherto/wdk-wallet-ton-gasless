@@ -16,9 +16,14 @@
 
 import WalletManager from '@tetherto/wdk-wallet'
 
+import { WalletAccountReadOnlyTon } from '@tetherto/wdk-wallet-ton'
+
 import WalletAccountTonGasless from './wallet-account-ton-gasless.js'
+import WalletAccountReadOnlyTonGasless from './wallet-account-read-only-ton-gasless.js'
 
 /** @typedef {import('@tetherto/wdk-wallet-ton').FeeRates} FeeRates */
+/** @typedef {import('@ton/ton').TonClient} TonClient */
+/** @typedef {import('@ton-api/client').TonApiClient} TonApiClient */
 
 /** @typedef {import('./wallet-account-ton-gasless.js').TonGaslessWalletConfig} TonGaslessWalletConfig */
 
@@ -41,6 +46,23 @@ export default class WalletManagerTonGasless extends WalletManager {
      * @type {TonGaslessWalletConfig}
      */
     this._config = config
+
+    /**
+     * The ton client. Shared with every account this manager creates, so two accounts never
+     * open two clients for the same endpoint.
+     *
+     * @protected
+     * @type {TonClient}
+     */
+    this._tonClient = WalletAccountReadOnlyTon._buildTonClient(config)
+
+    /**
+     * The ton api client. Shared with every account this manager creates.
+     *
+     * @protected
+     * @type {TonApiClient}
+     */
+    this._tonApiClient = WalletAccountReadOnlyTonGasless._buildTonApiClient(config)
   }
 
   /**
@@ -67,12 +89,23 @@ export default class WalletManagerTonGasless extends WalletManager {
    */
   async getAccountByPath (path) {
     if (!this._accounts[path]) {
-      const account = new WalletAccountTonGasless(this.seed, path, this._config)
+      const account = new WalletAccountTonGasless(this.seed, path, this._accountConfig())
 
       this._accounts[path] = account
     }
 
     return this._accounts[path]
+  }
+
+  /**
+   * Builds the account config, injecting the manager's shared clients so accounts reuse them
+   * instead of opening their own.
+   *
+   * @private
+   * @returns {TonGaslessWalletConfig} The account configuration.
+   */
+  _accountConfig () {
+    return { ...this._config, tonClient: this._tonClient, tonApiClient: this._tonApiClient }
   }
 
   /**

@@ -113,21 +113,33 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      */
     this._config = config
 
+    this._tonApiClient = WalletAccountReadOnlyTonGasless._buildTonApiClient(config)
+
+    /** @private */
+    this._tonReadOnlyAccount = tonReadOnlyAccount
+  }
+
+  /**
+   * Builds the ton api client from the wallet configuration: a ton api config, an already-built
+   * {@link TonApiClient} reused as-is, or a list of either (with internal api calls failing over).
+   *
+   * @protected
+   * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>} [config] - The configuration object.
+   * @returns {TonApiClient} The ton api client.
+   */
+  static _buildTonApiClient (config = {}) {
     const { tonApiClient, retries = 3 } = config
 
     if (Array.isArray(tonApiClient)) {
       if (!tonApiClient.length) {
         throw new Error("The 'tonApiClient' option cannot be set to an empty list.")
       }
-      this._tonApiClient = WalletAccountReadOnlyTonGasless._createTonApiClientWithFailover(tonApiClient, retries)
-    } else {
-      this._tonApiClient = tonApiClient instanceof TonApiClient
-        ? tonApiClient
-        : new TonApiClient({ baseUrl: tonApiClient.url, apiKey: tonApiClient.secretKey })
+      return WalletAccountReadOnlyTonGasless._createTonApiClientWithFailover(tonApiClient, retries)
     }
 
-    /** @private */
-    this._tonReadOnlyAccount = tonReadOnlyAccount
+    return tonApiClient instanceof TonApiClient
+      ? tonApiClient
+      : new TonApiClient({ baseUrl: tonApiClient.url, apiKey: tonApiClient.secretKey })
   }
 
   /**

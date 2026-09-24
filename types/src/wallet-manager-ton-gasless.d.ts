@@ -14,6 +14,21 @@ export default class WalletManagerTonGasless extends WalletManager {
      */
     protected _config: TonGaslessWalletConfig;
     /**
+     * The ton client. Shared with every account this manager creates, so two accounts never
+     * open two clients for the same endpoint.
+     *
+     * @protected
+     * @type {TonClient}
+     */
+    protected _tonClient: TonClient;
+    /**
+     * The ton api client. Shared with every account this manager creates.
+     *
+     * @protected
+     * @type {TonApiClient}
+     */
+    protected _tonApiClient: TonApiClient;
+    /**
      * Returns the wallet account at a specific index (see [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)).
      *
      * @example
@@ -34,12 +49,22 @@ export default class WalletManagerTonGasless extends WalletManager {
      */
     getAccountByPath(path: string): Promise<WalletAccountTonGasless>;
     /**
+     * Builds the account config, injecting the manager's shared clients so accounts reuse them
+     * instead of opening their own.
+     *
+     * @private
+     * @returns {TonGaslessWalletConfig} The account configuration.
+     */
+    private _accountConfig;
+    /**
      * Returns the current fee rates.
      *
      * @returns {Promise<FeeRates>} The fee rates (in nanotons).
      */
     getFeeRates(): Promise<FeeRates>;
 }
+export type TonClient = import("@ton/ton").TonClient;
+export type TonApiClient = import("@ton-api/client").TonApiClient;
 export type FeeRates = import("@tetherto/wdk-wallet-ton").FeeRates;
 export type TonGaslessWalletConfig = import("./wallet-account-ton-gasless.js").TonGaslessWalletConfig;
 import WalletManager from '@tetherto/wdk-wallet';
