@@ -7,7 +7,7 @@
 
 **Note**: This package is currently in beta. Please test thoroughly in development environments before using in production.
 
-Manage TON wallets and relay Jetton transfers through TON API gasless paymaster flows. The package derives TON accounts from BIP-39 seed phrases, reads native TON and Jetton balances, and pays transfer fees with a configured paymaster Jetton instead of native TON.
+Manage TON wallets and relay Jetton transfers through TON API gasless paymaster flows using WDK (Wallet Development Kit) by Tether. The package derives TON accounts from BIP-39 seed phrases, reads native TON and Jetton balances, and pays transfer fees with a configured paymaster Jetton instead of native TON.
 
 ## About WDK
 
