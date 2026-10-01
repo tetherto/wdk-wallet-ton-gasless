@@ -17,6 +17,14 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     protected _config: TonGaslessWalletConfig;
     /** @private */
     private _tonAccount;
+    /** @private */
+    private _disposed;
+    /**
+     * True if the account has been disposed.
+     *
+     * @type {boolean}
+     */
+    get disposed(): boolean;
     /**
      * The derivation path's index of this account.
      *
@@ -44,6 +52,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
      *
      * @param {string} message - The message to sign.
      * @returns {Promise<string>} The message's signature.
+     * @throws {DisposalError} If the account has been disposed.
      */
     sign(message: string): Promise<string>;
     /**
@@ -67,6 +76,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
      * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
      * @returns {Promise<TransferResult>} The transfer's result.
      * @throws {Error} If the transfer's cost exceeds the maximum transfer fee option.
+     * @throws {DisposalError} If the account has been disposed.
      */
     transfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
     /**

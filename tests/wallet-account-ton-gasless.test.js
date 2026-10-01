@@ -5,6 +5,8 @@ import { JettonMinter } from '@ton-community/assets-sdk'
 
 import * as bip39 from 'bip39'
 
+import { DisposalError } from '@tetherto/wdk-wallet'
+
 import BlockchainWithLogs from './blockchain-with-logs.js'
 import FakeTonClient from './fake-ton-client.js'
 import FakeTonApiClient from './fake-ton-api-client.js'
@@ -448,6 +450,37 @@ describe('WalletAccountTonGasless', () => {
 
       expect(disposeSpy).toHaveBeenCalledTimes(1)
       expect(testAccount.keyPair.privateKey).toBe(null)
+    })
+
+    test('should expose the disposed state', () => {
+      const testAccount = new WalletAccountTonGasless(SEED_PHRASE, "0'/0/0", {
+        tonClient,
+        tonApiClient,
+        paymasterToken: {
+          address: paymasterToken.address.toString()
+        }
+      })
+
+      expect(testAccount.disposed).toBe(false)
+
+      testAccount.dispose()
+
+      expect(testAccount.disposed).toBe(true)
+    })
+
+    test('should throw DisposalError from sign and transfer once disposed', async () => {
+      const testAccount = new WalletAccountTonGasless(SEED_PHRASE, "0'/0/0", {
+        tonClient,
+        tonApiClient,
+        paymasterToken: {
+          address: paymasterToken.address.toString()
+        }
+      })
+
+      testAccount.dispose()
+
+      await expect(testAccount.sign('message')).rejects.toThrow(DisposalError)
+      await expect(testAccount.transfer({ token: paymasterToken.address.toString(), recipient: paymasterToken.address.toString(), amount: 1n })).rejects.toThrow(DisposalError)
     })
   })
 })

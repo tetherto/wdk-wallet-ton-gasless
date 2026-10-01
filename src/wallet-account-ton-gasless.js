@@ -13,6 +13,8 @@
 // limitations under the License.
 'use strict'
 
+import { DisposalError } from '@tetherto/wdk-wallet'
+
 import { WalletAccountTon } from '@tetherto/wdk-wallet-ton'
 
 import { beginCell, internal, SendMode, external, storeMessage } from '@ton/ton'
@@ -54,6 +56,18 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
 
     /** @private */
     this._tonAccount = tonAccount
+
+    /** @private */
+    this._disposed = false
+  }
+
+  /**
+   * True if the account has been disposed.
+   *
+   * @type {boolean}
+   */
+  get disposed () {
+    return this._disposed
   }
 
   /**
@@ -92,8 +106,13 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    *
    * @param {string} message - The message to sign.
    * @returns {Promise<string>} The message's signature.
+   * @throws {DisposalError} If the account has been disposed.
    */
   async sign (message) {
+    if (this.disposed) {
+      throw new DisposalError('The account has been disposed.')
+    }
+
     return await this._tonAccount.sign(message)
   }
 
@@ -124,8 +143,13 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
    * @returns {Promise<TransferResult>} The transfer's result.
    * @throws {Error} If the transfer's cost exceeds the maximum transfer fee option.
+   * @throws {DisposalError} If the account has been disposed.
    */
   async transfer (options, config) {
+    if (this.disposed) {
+      throw new DisposalError('The account has been disposed.')
+    }
+
     const { paymasterToken, transferMaxFee } = config ?? this._config
 
     const message = await this._getGaslessTokenTransferMessage(options)
@@ -161,7 +185,11 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * Disposes the wallet account, erasing the private key from the memory.
    */
   dispose () {
+    if (this._disposed) return
+
     this._tonAccount.dispose()
+
+    this._disposed = true
   }
 
   /** @private */
