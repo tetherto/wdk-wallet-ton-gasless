@@ -126,7 +126,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * @throws {Error} If the transfer's cost exceeds the maximum transfer fee option.
    */
   async transfer (options, config) {
-    const { paymasterToken, transferMaxFee } = config ?? this._config
+    const { paymasterToken, transferMaxFee } = { ...this._config, ...config }
 
     const message = await this._getGaslessTokenTransferMessage(options)
     const rawParams = await this._getGaslessTokenTransferRawParams(message, { paymasterToken })
