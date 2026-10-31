@@ -64,11 +64,11 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
      * Transfers a token to another address.
      *
      * @param {TransferOptions} options - The transfer's options.
-     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>} [config] - If set, overrides the 'paymasterToken' and 'transferMaxFee' options defined in the wallet account configuration.
+     * @param {Partial<Pick<TonGaslessWalletConfig, 'paymasterToken' | 'transferMaxFee'>>} [config] - Overrides individual options; omitted or undefined options retain their configured values.
      * @returns {Promise<TransferResult>} The transfer's result.
      * @throws {Error} If the transfer's cost exceeds the maximum transfer fee option.
      */
-    transfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">): Promise<TransferResult>;
+    transfer(options: TransferOptions, config?: Partial<Pick<TonGaslessWalletConfig, "paymasterToken" | "transferMaxFee">>): Promise<TransferResult>;
     /**
      * Returns a read-only copy of the account.
      *

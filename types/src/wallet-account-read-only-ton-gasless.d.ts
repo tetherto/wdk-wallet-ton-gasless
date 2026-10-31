@@ -52,10 +52,10 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      * Quotes the costs of a transfer operation.
      *
      * @param {TransferOptions} options - The transfer's options.
-     * @param {Pick<TonGaslessWalletConfig, 'paymasterToken'>} [config] - If set, overrides the 'paymasterToken' options defined in the wallet account configuration.
+     * @param {Partial<Pick<TonGaslessWalletConfig, 'paymasterToken'>>} [config] - Overrides the paymaster token; an omitted or undefined token retains the configured value.
      * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
      */
-    quoteTransfer(options: TransferOptions, config?: Pick<TonGaslessWalletConfig, "paymasterToken">): Promise<Omit<TransferResult, "hash">>;
+    quoteTransfer(options: TransferOptions, config?: Partial<Pick<TonGaslessWalletConfig, "paymasterToken">>): Promise<Omit<TransferResult, "hash">>;
     /**
      * Verifies a message's signature.
      *

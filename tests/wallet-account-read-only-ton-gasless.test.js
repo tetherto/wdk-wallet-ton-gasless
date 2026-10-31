@@ -200,6 +200,14 @@ describe('WalletAccountReadOnlyTonGasless', () => {
       expect(gaslessEstimateSpy).toHaveBeenCalledTimes(1)
     })
 
+    test.each([{}, { paymasterToken: undefined }])('should use the configured paymaster for partial overrides %p', async (config) => {
+      const transfer = { token: testToken.address.toString(), recipient: RECIPIENT.address, amount: 1_000 }
+      const walletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(walletAddress)
+
+      await expect(account.quoteTransfer(transfer, config)).resolves.toEqual({ fee: 5_000_000n })
+    })
+
     test('should throw error when gaslessConfig API fails', async () => {
       const TRANSFER = {
         token: testToken.address.toString(),
