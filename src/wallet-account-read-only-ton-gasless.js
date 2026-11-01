@@ -188,15 +188,16 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
    * Quotes the costs of a transfer operation.
    *
    * @param {TransferOptions} options - The transfer's options.
-   * @param {Pick<TonGaslessWalletConfig, 'paymasterToken'>} [config] - If set, overrides the 'paymasterToken' options defined in the wallet account configuration.
+   * @param {Partial<Pick<TonGaslessWalletConfig, 'paymasterToken'>>} [config] - Overrides the paymaster token; an omitted or undefined token retains the configured value.
    * @returns {Promise<Omit<TransferResult, 'hash'>>} The transfer's quotes.
    */
   async quoteTransfer (options, config) {
+    const { paymasterToken = this._config.paymasterToken } = config ?? {}
     const message = await this._getGaslessTokenTransferMessage(options)
 
     const { commission } = await this._getGaslessTokenTransferRawParams(
       message,
-      config ?? this._config
+      { paymasterToken }
     )
 
     return { fee: commission }
