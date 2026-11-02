@@ -19,7 +19,7 @@ import { WalletAccountReadOnlyTon } from '@tetherto/wdk-wallet-ton'
 
 import FailoverProvider from '@tetherto/wdk-failover-provider'
 
-import { Address, beginCell, Cell, internal, toNano, storeMessage } from '@ton/ton'
+import { Address, beginCell, Cell, CellType, internal, toNano, storeMessage } from '@ton/ton'
 
 import { TonApiClient } from '@ton-api/client'
 
@@ -83,6 +83,26 @@ function parseCoins (value) {
   } catch {
     return null
   }
+}
+
+/**
+ * Returns the hash of the ordinary cell a code cell stands for: a library cell (an exotic cell
+ * holding only the hash of the code) and the code it references run the same code, but their own
+ * hashes differ.
+ *
+ * @param {Cell} code - The code cell.
+ * @returns {Buffer} The code hash.
+ */
+function getCodeHash (code) {
+  if (code.type === CellType.Library) {
+    const slice = code.beginParse(true)
+
+    slice.loadUint(8)
+
+    return slice.loadBuffer(32)
+  }
+
+  return code.hash()
 }
 
 export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOnly {
@@ -486,7 +506,7 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     masterStack.skip(4)
     const expectedCode = masterStack.readCell()
 
-    if (!Cell.fromBoc(code)[0].hash().equals(expectedCode.hash())) {
+    if (!getCodeHash(Cell.fromBoc(code)[0]).equals(getCodeHash(expectedCode))) {
       throw new Error(invalidJettonWallet)
     }
 
