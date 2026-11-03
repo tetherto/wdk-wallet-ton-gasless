@@ -145,11 +145,12 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
      */
     protected _validateGaslessTokenTransferRawParams(rawParams: SignRawParams, originalMessage: MessageRelaxed, { paymasterToken }: Pick<TonGaslessWalletConfig, "paymasterToken">): Promise<void>;
     /**
-     * Returns the Jetton wallet address for the account and a specific master.
+     * Returns the verified Jetton wallet address for the account and a specific master.
      *
      * @private
      * @param {string} masterAddress - The Jetton master address.
      * @returns {Promise<Address>} The account's Jetton wallet address.
+     * @throws {Error} If the reported address is not the account's wallet for this Jetton.
      */
     private _getJettonWalletAddressForMaster;
 }

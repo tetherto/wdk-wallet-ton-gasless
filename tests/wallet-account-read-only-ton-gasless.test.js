@@ -180,6 +180,11 @@ describe('WalletAccountReadOnlyTonGasless', () => {
   })
 
   describe('quoteTransfer', () => {
+    beforeEach(async () => {
+      await sendTestTokensTo(ACCOUNT.address, 100_000n)
+      await sendPaymasterTokensTo(ACCOUNT.address, 100_000n)
+    })
+
     test('should successfully quote a transfer', async () => {
       const TRANSFER = {
         token: testToken.address.toString(),
@@ -187,8 +192,6 @@ describe('WalletAccountReadOnlyTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       const gaslessConfigSpy = jest.spyOn(tonApiClient.gasless, 'gaslessConfig')
       const gaslessEstimateSpy = jest.spyOn(tonApiClient.gasless, 'gaslessEstimate')
 
@@ -215,8 +218,6 @@ describe('WalletAccountReadOnlyTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       jest.spyOn(tonApiClient.gasless, 'gaslessConfig').mockRejectedValue(new Error('API error'))
 
       await expect(account.quoteTransfer(TRANSFER)).rejects.toThrow('API error')
@@ -229,8 +230,6 @@ describe('WalletAccountReadOnlyTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       jest.spyOn(tonApiClient.gasless, 'gaslessEstimate').mockRejectedValue(new Error('Estimate failed'))
 
       await expect(account.quoteTransfer(TRANSFER)).rejects.toThrow('Estimate failed')
@@ -242,9 +241,6 @@ describe('WalletAccountReadOnlyTonGasless', () => {
         recipient: 'invalid-address',
         amount: 1_000
       }
-
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
 
       await expect(account.quoteTransfer(TRANSFER)).rejects.toThrow()
     })

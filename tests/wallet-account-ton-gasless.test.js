@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals'
 
-import { Address, beginCell } from '@ton/ton'
+import { Address, beginCell, TupleReader } from '@ton/ton'
 import { JettonMinter } from '@ton-community/assets-sdk'
 
 import * as bip39 from 'bip39'
@@ -209,9 +209,6 @@ describe('WalletAccountTonGasless', () => {
 
     async function prepareTokenTransfer () {
       const transfer = { ...TRANSFER, token: testToken.address.toString() }
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
 
       return transfer
     }
@@ -235,8 +232,6 @@ describe('WalletAccountTonGasless', () => {
       global.Date.now = jest.fn(() => 3_000_000_000_000)
       jest.spyOn(account._tonReadOnlyAccount, '_generateQueryId').mockReturnValue(0x8000000040000000n)
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0)
 
       const gaslessConfigSpy = jest.spyOn(tonApiClient.gasless, 'gaslessConfig')
@@ -253,6 +248,121 @@ describe('WalletAccountTonGasless', () => {
       expect(gaslessConfigSpy).toHaveBeenCalledTimes(1)
       expect(gaslessEstimateSpy).toHaveBeenCalledTimes(1)
       expect(gaslessSendSpy).toHaveBeenCalledTimes(1)
+    })
+
+    describe('when the jetton master reports a jetton wallet that is not the account\'s', () => {
+      function reportJettonWallet (master, address) {
+        const runMethod = tonClient.runMethod.bind(tonClient)
+
+        jest.spyOn(tonClient, 'runMethod').mockImplementation(async (target, name, stack) => {
+          if (name === 'get_wallet_address' && target.equals(master.address)) {
+            return { stack: new TupleReader([{ type: 'slice', cell: beginCell().storeAddress(address).endCell() }]) }
+          }
+
+          return runMethod(target, name, stack)
+        })
+      }
+
+      async function deployOtherToken () {
+        const otherToken = blockchain.openContract(JettonMinter.createFromConfig({
+          admin: treasury.address,
+          content: beginCell().storeStringTail('OtherToken').endCell()
+        }))
+
+        await otherToken.sendDeploy(treasury.getSender())
+
+        return otherToken
+      }
+
+      test.each([
+        ['an address with no contract deployed', 'The account has no Jetton wallet deployed for this token.', async () => {
+          return await testToken.getWalletAddress(Address.parse(RECIPIENT.address))
+        }],
+        ['a contract that is not a jetton wallet', 'The Jetton master returned an invalid Jetton wallet address.', async () => {
+          return testToken.address
+        }],
+        ['the jetton wallet of another account', 'The Jetton master returned an invalid Jetton wallet address.', async () => {
+          await sendTestTokensTo(RECIPIENT.address, INITIAL_TOKEN_BALANCE)
+
+          return await testToken.getWalletAddress(Address.parse(RECIPIENT.address))
+        }],
+        ['the account\'s jetton wallet of another token', 'The Jetton master returned an invalid Jetton wallet address.', async () => {
+          const otherToken = await deployOtherToken()
+
+          await otherToken.sendMint(treasury.getSender(), Address.parse(ACCOUNT.address), INITIAL_TOKEN_BALANCE)
+
+          return await otherToken.getWalletAddress(Address.parse(ACCOUNT.address))
+        }]
+      ])('should not transfer to %s', async (_, message, getReportedAddress) => {
+        reportJettonWallet(testToken, await getReportedAddress())
+
+        const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+        await expect(account.transfer({ ...TRANSFER, token: testToken.address.toString() })).rejects.toThrow(message)
+
+        expect(gaslessSendSpy).not.toHaveBeenCalled()
+      })
+
+      test('should reject an invalid paymaster jetton wallet', async () => {
+        reportJettonWallet(paymasterToken, testToken.address)
+
+        const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
+
+        await expect(account.transfer({ ...TRANSFER, token: testToken.address.toString() }))
+          .rejects.toThrow('The Jetton master returned an invalid Jetton wallet address.')
+
+        expect(gaslessSendSpy).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('when the jetton wallet code is stored as a library cell', () => {
+      async function getLibraryCell () {
+        const jettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+        const contract = await blockchain.getContract(jettonWalletAddress)
+
+        return beginCell().storeUint(2, 8).storeBuffer(contract.accountState.state.code.hash()).endCell({ exotic: true })
+      }
+
+      test('should transfer if the jetton master reports the code as a library cell', async () => {
+        const libraryCell = await getLibraryCell()
+        const runMethod = tonClient.runMethod.bind(tonClient)
+
+        jest.spyOn(tonClient, 'runMethod').mockImplementation(async (target, name, stack) => {
+          if (name === 'get_jetton_data' && target.equals(testToken.address)) {
+            const empty = beginCell().endCell()
+
+            return {
+              stack: new TupleReader([
+                { type: 'int', value: 0n },
+                { type: 'int', value: 0n },
+                { type: 'slice', cell: empty },
+                { type: 'cell', cell: empty },
+                { type: 'cell', cell: libraryCell }
+              ])
+            }
+          }
+
+          return runMethod(target, name, stack)
+        })
+
+        await expect(account.transfer({ ...TRANSFER, token: testToken.address.toString() }))
+          .resolves.toBeDefined()
+      })
+
+      test('should transfer if the jetton wallet stores its code as a library cell', async () => {
+        const libraryCell = await getLibraryCell()
+        const getContractState = tonClient.getContractState.bind(tonClient)
+        const jettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
+
+        jest.spyOn(tonClient, 'getContractState').mockImplementation(async (address) => {
+          const state = await getContractState(address)
+
+          return address.equals(jettonWalletAddress) ? { ...state, code: libraryCell.toBoc() } : state
+        })
+
+        await expect(account.transfer({ ...TRANSFER, token: testToken.address.toString() }))
+          .resolves.toBeDefined()
+      })
     })
 
     test('should reject a relay-mutated original transfer before signing', async () => {
@@ -331,8 +441,6 @@ describe('WalletAccountTonGasless', () => {
         .mockReturnValueOnce(0x1999999933333333n)
         .mockReturnValueOnce(0x4ccccccc66666666n)
         .mockReturnValueOnce(0x8000000099999999n)
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0).mockResolvedValue(1).mockResolvedValue(2)
       const gaslessSendSpy = jest.spyOn(tonApiClient.gasless, 'gaslessSend')
 
@@ -352,9 +460,6 @@ describe('WalletAccountTonGasless', () => {
         recipient: RECIPIENT.address,
         amount: 1_000
       }
-
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
 
       await expect(
         account.transfer(TRANSFER, { transferMaxFee: 1_000_000n })
@@ -391,9 +496,6 @@ describe('WalletAccountTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
-
       await expect(account.transfer(TRANSFER)).rejects.toThrow('Unknown address type: invalid-address')
     })
 
@@ -404,8 +506,6 @@ describe('WalletAccountTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       jest.spyOn(tonApiClient.gasless, 'gaslessConfig').mockRejectedValue(new Error('Network error: Failed to get gasless config'))
 
       await expect(account.transfer(TRANSFER)).rejects.toThrow('Network error: Failed to get gasless config')
@@ -418,8 +518,6 @@ describe('WalletAccountTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       jest.spyOn(tonApiClient.gasless, 'gaslessEstimate').mockRejectedValue(new Error('API error: Failed to estimate gas'))
 
       await expect(account.transfer(TRANSFER)).rejects.toThrow('API error: Failed to estimate gas')
@@ -432,8 +530,6 @@ describe('WalletAccountTonGasless', () => {
         amount: 1_000
       }
 
-      const accountJettonWalletAddress = await testToken.getWalletAddress(Address.parse(ACCOUNT.address))
-      jest.spyOn(account._tonReadOnlyAccount, '_getJettonWalletAddress').mockResolvedValue(accountJettonWalletAddress)
       account._tonAccount._contract.getSeqno = jest.fn().mockResolvedValue(0)
       jest.spyOn(tonApiClient.gasless, 'gaslessSend').mockRejectedValue(new Error('Transaction failed: Insufficient funds'))
 
