@@ -241,7 +241,7 @@ describe('WalletAccountTonGasless', () => {
       const { hash, fee } = await account.transfer(TRANSFER)
 
       expect(hash).toBeDefined()
-      expect(hash).toBe('2bf4cd621b09ad2bf8f9867e4e9d0611255ad1c76e806616234568888d606b88')
+      expect(hash).toBe('374d0c8e82f6820af56bbf73aa5f6e36688607e25f74cc20f4e1a63ff18d9e98')
 
       expect(fee).toBe(5_000_000n)
 
