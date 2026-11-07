@@ -91,6 +91,8 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     dispose(): void;
     /** @private */
     private _sendGaslessTokenTransfer;
+    /** @private */
+    private _guardDisposed;
 }
 export type IWalletAccount = import("@tetherto/wdk-wallet").IWalletAccount;
 export type KeyPair = import("@tetherto/wdk-wallet-ton").KeyPair;

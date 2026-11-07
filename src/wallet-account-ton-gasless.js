@@ -109,9 +109,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * @throws {DisposalError} If the account has been disposed.
    */
   async sign (message) {
-    if (this.disposed) {
-      throw new DisposalError('The account has been disposed.')
-    }
+    this._guardDisposed()
 
     return await this._tonAccount.sign(message)
   }
@@ -146,9 +144,7 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
    * @throws {DisposalError} If the account has been disposed.
    */
   async transfer (options, config) {
-    if (this.disposed) {
-      throw new DisposalError('The account has been disposed.')
-    }
+    this._guardDisposed()
 
     const { paymasterToken, transferMaxFee } = config ?? this._config
 
@@ -231,5 +227,12 @@ export default class WalletAccountTonGasless extends WalletAccountReadOnlyTonGas
     })
 
     return transfer.hash().toString('hex')
+  }
+
+  /** @private */
+  _guardDisposed () {
+    if (this.disposed) {
+      throw new DisposalError('The account has been disposed.')
+    }
   }
 }
