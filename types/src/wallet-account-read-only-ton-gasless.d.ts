@@ -99,7 +99,8 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
     waitForTransaction(hash: string, options?: WaitForTransactionOptions): Promise<TransactionReceipt & TonTransactionDetails>;
     /**
      * Builds the ton api client from the wallet configuration: a ton api config, an already-built
-     * {@link TonApiClient} reused as-is, or a list of either (with internal api calls failing over).
+     * {@link TonApiClient} reused as-is, or a list of either (with internal api calls failing over across them, through a
+     * new client that leaves the clients passed in unchanged).
      *
      * @protected
      * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>} [config] - The configuration object.
@@ -190,7 +191,7 @@ export type TonGaslessWalletConfig = {
      */
     tonClient: TonClientConfig | TonClient | Array<TonClientConfig | TonClient>;
     /**
-     * - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list.
+     * - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list, through a client of its own: only the http client of each api client in the list is used, and the api clients themselves are left unchanged.
      */
     tonApiClient: TonApiClientConfig | TonApiClient | Array<TonApiClientConfig | TonApiClient>;
     /**
