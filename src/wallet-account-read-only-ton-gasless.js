@@ -54,7 +54,7 @@ import { TonApiClient } from '@ton-api/client'
 /**
  * @typedef {Object} TonGaslessWalletConfig
  * @property {TonClientConfig | TonClient | Array<TonClientConfig | TonClient>} tonClient - The ton configuration or ton client {@link TonClient}. It's also possible to provide an array of configs or clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next client in the list.
- * @property {TonApiClientConfig | TonApiClient | Array<TonApiClientConfig | TonApiClient>} tonApiClient - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list.
+ * @property {TonApiClientConfig | TonApiClient | Array<TonApiClientConfig | TonApiClient>} tonApiClient - The ton api configuration or ton api client {@link TonApiClient}. It's also possible to provide an array of configs or api clients instead. In such case, connection errors will cause the wallet to automatically fallback on the next api client in the list, through a client of its own: only the http client of each api client in the list is used, and the api clients themselves are left unchanged.
  * @property {number} [retries] - If set and if 'tonClient' and 'tonApiClient' are lists of configs or clients, the number of additional retry attempts after the initial call fails. Total attempts = `1 + retries`. For example, `retries: 3` with 4 clients will try each client once before throwing. If `retries` exceeds the number of clients, the failover will loop back and retry already-failed clients in round-robin order. Default: 3.
  * @property {Object} paymasterToken - The paymaster token configuration.
  * @property {string} paymasterToken.address - The address of the paymaster token.
@@ -141,7 +141,8 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
 
   /**
    * Builds the ton api client from the wallet configuration: a ton api config, an already-built
-   * {@link TonApiClient} reused as-is, or a list of either (with internal api calls failing over).
+   * {@link TonApiClient} reused as-is, or a list of either (with internal api calls failing over across them, through a
+   * new client that leaves the clients passed in unchanged).
    *
    * @protected
    * @param {Omit<TonGaslessWalletConfig, 'transferMaxFee' | 'transactionMaxFee'>} [config] - The configuration object.
@@ -287,21 +288,15 @@ export default class WalletAccountReadOnlyTonGasless extends WalletAccountReadOn
   static _createTonApiClientWithFailover (tonApiClients, retries) {
     const failoverProvider = new FailoverProvider({ retries })
 
-    let tonApiClient
+    for (const entry of tonApiClients) {
+      const client = entry instanceof TonApiClient
+        ? entry
+        : new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
 
-    const clients = tonApiClients.map((entry) => {
-      if (entry instanceof TonApiClient) {
-        if (!tonApiClient) tonApiClient = entry
-        return entry
-      }
-      return new TonApiClient({ baseUrl: entry.url, apiKey: entry.secretKey })
-    })
-
-    for (const client of clients) {
       failoverProvider.addProvider(client.http)
     }
 
-    tonApiClient = tonApiClient || new TonApiClient()
+    const tonApiClient = new TonApiClient()
     tonApiClient.http = failoverProvider.initialize()
 
     return tonApiClient

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globa
 import { Address } from '@ton/ton'
 import { JettonMinter } from '@ton-community/assets-sdk'
 import { beginCell } from '@ton/ton'
+import { TonApiClient } from '@ton-api/client'
 
 import * as bip39 from 'bip39'
 
@@ -95,6 +96,24 @@ describe('WalletAccountReadOnlyTonGasless', () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+  })
+
+  describe('constructor', () => {
+    test('should leave the ton api clients given in a list unchanged', async () => {
+      const appTonApiClient = new TonApiClient({ baseUrl: 'https://dummy-ton-api.url' })
+      const { http } = appTonApiClient
+
+      const accountWithList = new WalletAccountReadOnlyTonGasless(ACCOUNT.keyPair.publicKey, {
+        tonClient,
+        tonApiClient: [appTonApiClient, { url: 'https://dummy-fallback-ton-api.url', secretKey: 'dummy-key' }],
+        paymasterToken: {
+          address: paymasterToken.address.toString()
+        }
+      })
+
+      expect(appTonApiClient.http).toBe(http)
+      expect(await accountWithList.getAddress()).toBe(ACCOUNT.address)
+    })
   })
 
   describe('getAddress', () => {
